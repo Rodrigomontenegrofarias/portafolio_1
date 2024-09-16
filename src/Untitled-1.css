@@ -1,0 +1,303 @@
+/* Estilos generales */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Temas */
+.light {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+.dark {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+/* Header */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  padding: 10px 0;
+  z-index: 1000; /* Asegura que el header esté sobre otros elementos */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Añade sombra para destacarlo */
+}
+
+.header.light {
+  background-color: #f8f8f8;
+}
+
+.header.dark {
+  background-color: #222222;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.header-nav ul {
+  display: flex;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.header-nav li {
+  margin-left: 1rem;
+}
+
+.header-nav a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.menu-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+/* Secciones */
+.section {
+  padding: 4rem 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+/* Home */
+.home {
+  text-align: center;
+}
+
+.home h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* About */
+.about-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.about-text {
+  flex: 1;
+  margin-right: 2rem;
+}
+
+.about-image img {
+  max-width: 100%;
+  border-radius: 50%;
+}
+
+/* Projects */
+
+
+.project-card {
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dark .project-card {
+  background-color: #444444;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+}
+
+.project-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 80%;
+  max-width: 600px;
+  position: relative;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content .btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.project-card h3 {
+  padding: 1rem;
+  margin: 0;
+}
+
+.project-card p {
+  padding: 0 1rem 1rem;
+}
+
+/* Project Detail */
+.project-detail {
+  padding: 4rem 0;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.project-detail img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.project-detail h3 {
+  margin-top: 2rem;
+}
+
+.project-detail ul {
+  padding-left: 1rem;
+}
+
+/* Contact */
+.contact-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.dark .form-group input,
+.dark .form-group textarea {
+  background-color: #444444;
+  color: #ffffff;
+  border-color: #666666;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 1rem 0;
+  background-color: #f8f8f8;
+}
+
+.dark .footer {
+  background-color: #222222;
+}
+
+/* Botón */
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: #0056b3;
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+  .header-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: inherit;
+    padding: 0.1rem;
+  }
+
+  .header-nav.open {
+    display: block;
+    font-size: 0.8rem;
+  }
+
+  .header-nav ul {
+    flex-direction: column;
+  }
+
+  .header-nav li {
+    margin: 0.5rem 0;
+  }
+
+  .menu-toggle-btn {
+    display: block;
+  }
+
+  .about-content {
+    flex-direction: column;
+  }
+
+  .about-text {
+    margin-right: 0;
+    margin-bottom: 2rem;
+  }
+}

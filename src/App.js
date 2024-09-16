@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
 
+// Componente de cabecera
 function Header({ toggleTheme, theme }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -32,6 +33,7 @@ function Header({ toggleTheme, theme }) {
   );
 }
 
+// Componente de inicio
 function Home() {
   return (
     <section id="inicio" className="section home full-height">
@@ -44,6 +46,7 @@ function Home() {
   );
 }
 
+// Componente sobre mí
 function About() {
   return (
     <section id="sobre-mi" className="section about full-height">
@@ -70,6 +73,7 @@ function About() {
   );
 }
 
+// Componente de detalles del proyecto
 function ProjectDetail({ project, onClose }) {
   return (
     <div className="project-detail">
@@ -87,6 +91,7 @@ function ProjectDetail({ project, onClose }) {
   );
 }
 
+// Componente de proyectos
 function Projects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const projects = [
@@ -120,6 +125,7 @@ function Projects() {
   );
 }
 
+// Componente de contacto
 function Contact() {
   const [formData, setFormData] = useState({ from_name: '', from_email: '', message: '', reply_to: '' });
   const [status, setStatus] = useState('');
@@ -133,17 +139,22 @@ function Contact() {
     setStatus('Enviando...');
 
     try {
+      console.log('Service ID:', process.env.REACT_APP_EMAILJS_SERVICE_ID);
+      console.log('Template ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
+      console.log('Public Key:', process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
+
       const result = await emailjs.send(
-        'service_199ivdm', // Service ID
-        'template_8kjbi9b', // Template ID
-        formData, // Datos del formulario
-        'OMXAbEih8zZ-MsYY5' // Public Key (User ID)
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+        formData,
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY
       );
-      console.log('Resultado:', result); // Para depurar
+
+      console.log('Resultado:', result);
       setStatus('Mensaje enviado correctamente!');
       setFormData({ from_name: '', from_email: '', message: '', reply_to: '' });
     } catch (error) {
-      console.error('Error al enviar el mensaje:', error); // Para depurar
+      console.error('Error al enviar el mensaje:', error);
       setStatus('Error al enviar el mensaje.');
     }
   };
@@ -197,37 +208,35 @@ function Contact() {
             />
           </div>
           <button type="submit" className="btn">Enviar</button>
-          <div className="form-status">{status}</div>
+          {status && <div className="form-status">{status}</div>}
         </form>
       </div>
     </section>
   );
 }
 
+// Componente principal de la aplicación
 function App() {
   const [theme, setTheme] = useState('light');
 
   const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   useEffect(() => {
+    // Aplicar tema al cargar la página
     document.body.className = theme;
   }, [theme]);
 
   return (
-    <div className={`App ${theme}`}>
+    <div className={`app ${theme}`}>
       <Header toggleTheme={toggleTheme} theme={theme} />
-      <main>
-        <Home />
-        <About />
-        <Projects />
-        <Contact />
-      </main>
-      <footer className="footer">
-        <div className="container">
-          <p>&copy; {new Date().getFullYear()} Mi Portafolio. Todos los derechos reservados.</p>
-        </div>
+      <Home />
+      <About />
+      <Projects />
+      <Contact />
+      <footer>
+        <p>&copy; 2024 Mi Portafolio. Todos los derechos reservados.</p>
       </footer>
     </div>
   );

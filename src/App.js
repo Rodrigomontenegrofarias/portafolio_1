@@ -13,7 +13,7 @@ function Header({ toggleTheme, theme }) {
   return (
     <header className={`header ${theme}`}>
       <div className="container header-container">
-        <div className="header-name">Mi Portafolio</div>
+        <div className="header-name">Rodrigo Montenegro</div>
         <nav className={`header-nav ${menuOpen ? 'open' : ''}`}>
           <ul>
             <li><a href="#inicio" onClick={toggleMenu}>Inicio</a></li>

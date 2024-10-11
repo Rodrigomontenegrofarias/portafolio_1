@@ -120,7 +120,13 @@ header {
   border-radius: 50%;
 }
 
-/* Projects */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas en pantallas grandes */
+  gap: 20px; /* Espacio entre las tarjetas */
+  padding: 20px; /* Espacio alrededor de la cuadrícula */
+}
+
 .project-card {
   background-color: #f8f8f8;
   border-radius: 8px;
@@ -328,5 +334,8 @@ header {
   .about-text {
     margin-right: 0;
     margin-bottom: 2rem;
+  }
+  .projects-grid {
+    grid-template-columns: 1fr; /* 1 columna en pantallas pequeñas */
   }
 }

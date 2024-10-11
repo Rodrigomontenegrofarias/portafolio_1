@@ -13,7 +13,7 @@ function Header({ toggleTheme, theme }) {
   return (
     <header className={`header ${theme}`}>
       <div className="container header-container">
-        <div className="header-name">Rodrigo Montenegro</div>
+        <div className="header-name">Rodrigo Montenegro F</div>
         <nav className={`header-nav ${menuOpen ? 'open' : ''}`}>
           <ul>
             <li><a href="#inicio" onClick={toggleMenu}>Inicio</a></li>
@@ -65,7 +65,7 @@ function About() {
             </ul>
           </div>
           <div className="about-image">
-            <img src="https://via.placeholder.com/300" alt="Mi foto" />
+            <img src="https://via.placeholder.com/300" alt="Rodrigo Montenegro" />
           </div>
         </div>
       </div>
@@ -98,6 +98,7 @@ function Projects() {
     { id: 1, title: 'Proyecto 1', description: 'Una aplicación web de comercio electrónico', image: 'https://via.placeholder.com/300x200' },
     { id: 2, title: 'Proyecto 2', description: 'Un blog personal con CMS personalizado', image: 'https://via.placeholder.com/300x200' },
     { id: 3, title: 'Proyecto 3', description: 'Una aplicación de seguimiento de tareas', image: 'https://via.placeholder.com/300x200' },
+    { id: 4, title: 'Proyecto 4', description: 'Una aplicación de seguimiento de tareas', image: 'https://via.placeholder.com/300x200' },
   ];
 
   return (
@@ -139,10 +140,6 @@ function Contact() {
     setStatus('Enviando...');
 
     try {
-      console.log('Service ID:', process.env.REACT_APP_EMAILJS_SERVICE_ID);
-      console.log('Template ID:', process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
-      console.log('Public Key:', process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
-
       const result = await emailjs.send(
         process.env.REACT_APP_EMAILJS_SERVICE_ID,
         process.env.REACT_APP_EMAILJS_TEMPLATE_ID,

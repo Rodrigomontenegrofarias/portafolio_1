@@ -6,6 +6,15 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
+h1, h2, h3 {
+  min-height: 50px; /* Cambia este valor según sea necesario */
+  display: flex;
+  align-items: center; /* Centra verticalmente el texto */
+  justify-content: center; /* Centra horizontalmente el texto */
+  margin: 0; /* Elimina márgenes para un mejor control */
+  padding: 1rem 0; /* Añade espacio vertical alrededor del título */
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -91,6 +100,7 @@ header {
   min-height: 100vh;
   display: flex;
   align-items: center;
+  flex-direction: column; /* Centra los contenidos en columnas */
 }
 
 /* Home */
@@ -100,10 +110,14 @@ header {
 
 .home h1 {
   font-size: 2.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1rem; /* Ajusta el espaciado inferior si es necesario */
 }
 
 /* About */
+.about {
+  text-align: center; /* Alineación central para títulos de sección */
+}
+
 .about-content {
   display: flex;
   justify-content: space-between;
@@ -118,6 +132,11 @@ header {
 .about-image img {
   max-width: 100%;
   border-radius: 50%;
+}
+
+/* Projects */
+.projects {
+  text-align: center; /* Alineación central para títulos de sección */
 }
 
 .projects-grid {
@@ -224,11 +243,31 @@ header {
   margin-top: 2rem;
 }
 
-.project-detail ul {
-  padding-left: 1rem;
+/* Estilo para listas en general */
+/* Ensure that bullet points are aligned to the left */
+ul {
+  list-style-position: inside; /* Moves bullet points inside the content box */
+  padding-left: 0; /* Removes default padding on the left */
+  margin-left: 0; /* Ensures no extra margin on the left */
+}
+
+li {
+  margin-bottom: 0.5rem; /* Adds some space between each item */
+  text-align: left; /* Ensures text alignment to the left */
+}
+
+
+
+ul li::marker {
+  font-size: 1rem; /* Ajusta el tamaño del punto */
+  margin-right: 10px; /* Ajusta el espacio entre el punto y el texto */
 }
 
 /* Contact */
+.contact {
+  text-align: center; /* Alineación central para títulos de sección */
+}
+
 .contact-form {
   max-width: 500px;
   margin: 0 auto;
@@ -335,6 +374,7 @@ header {
     margin-right: 0;
     margin-bottom: 2rem;
   }
+  
   .projects-grid {
     grid-template-columns: 1fr; /* 1 columna en pantallas pequeñas */
   }

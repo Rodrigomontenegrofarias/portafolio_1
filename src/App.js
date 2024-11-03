@@ -1,25 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
+//import latestTag from 'raw-loader!./latestTag.txt'; // Importa el contenido del archivo como texto
+import latestTag from './latestTag.txt'; // Just import the file
 
+//import latestTag from './latestTag.txt'; // Importa el archivo
+
+
+// Componente de cabecera
 // Componente de cabecera
 function Header({ toggleTheme, theme }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
+  // Alternar estado del menú
+  const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  // Clases de encabezado y nav basadas en tema y estado del menú
+  const headerClass = `header ${theme}`;
+  const navClass = `header-nav ${menuOpen ? 'open' : ''}`;
+  const boxClass = `menu-box ${theme}`; // Clase para el recuadro
 
   return (
-    <header className={`header ${theme}`}>
+    <header className={headerClass}>
       <div className="container header-container">
         <div className="header-name">Rodrigo Montenegro</div>
-        <nav className={`header-nav ${menuOpen ? 'open' : ''}`}>
+        <nav className={navClass}>
           <ul>
-            <li><a href="#inicio" onClick={toggleMenu}>Inicio</a></li>
-            <li><a href="#sobre-mi" onClick={toggleMenu}>Sobre mí</a></li>
-            <li><a href="#proyectos" onClick={toggleMenu}>Proyectos</a></li>
-            <li><a href="#contacto" onClick={toggleMenu}>Contacto</a></li>
+            {['Inicio', 'Sobre mí', 'Proyectos', 'Contacto'].map((item) => (
+              <li key={item}>
+                <a href={`#${item.toLowerCase().replace(' ', '-')}`} onClick={toggleMenu}>
+                  {item}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
         <button className="theme-toggle-btn" onClick={toggleTheme}>
@@ -29,12 +42,32 @@ function Header({ toggleTheme, theme }) {
           ☰
         </button>
       </div>
+      {/* Recuadro debajo del menú */}
+      <div className={boxClass}></div>
     </header>
   );
 }
 
+
+// Componente de inicio
 // Componente de inicio
 function Home() {
+  const [tagContent, setTagContent] = useState(''); // Inicializa como vacío
+
+  useEffect(() => {
+    const fetchTag = async () => {
+      try {
+        const response = await fetch(latestTag);
+        const text = await response.text(); // Obtén el contenido como texto
+        setTagContent(text); // Actualiza el estado con el contenido
+      } catch (error) {
+        console.error('Error al cargar la etiqueta:', error);
+      }
+    };
+
+    fetchTag(); // Llama a la función para cargar la etiqueta
+  }, []); // Solo se ejecuta una vez al montar el componente
+
   return (
     <section id="inicio" className="section home full-height">
       <div className="container">
@@ -42,27 +75,27 @@ function Home() {
         <p>Soy un desarrollador web apasionado por crear experiencias digitales increíbles.</p>
         <a href="#proyectos" className="btn">Ver mis proyectos</a>
       </div>
+      <div className="prueba">
+        <p>Tag: {tagContent}</p>
+      </div>
     </section>
   );
 }
 
+
 // Componente sobre mí
 function About() {
   return (
-    <section id="sobre-mi" className="section about full-height">
+    <section id="sobre-mí" className="section about full-height">
       <div className="container">
         <h2>Sobre mí</h2>
         <div className="about-content">
           <div className="about-text">
-            <p>Soy un desarrollador web con experiencia en React, Node.js y diseño responsivo. Me apasiona crear aplicaciones web eficientes y fáciles de usar.</p>
-            <h3>Mis habilidades:</h3>
-            <ul>
-              <li>React</li>
-              <li>JavaScript</li>
-              <li>HTML & CSS</li>
-              <li>Node.js</li>
-              <li>Git</li>
-            </ul>
+            <p>
+              Soy Rodrigo Montenegro, un desarrollador web con experiencia en React, Node.js y diseño responsivo.
+              Me apasiona crear aplicaciones web eficientes y fáciles de usar.
+            </p>
+            <SkillList />
           </div>
           <div className="about-image">
             <img src="https://via.placeholder.com/300" alt="Rodrigo Montenegro" />
@@ -70,6 +103,22 @@ function About() {
         </div>
       </div>
     </section>
+  );
+}
+
+
+// Lista de habilidades reutilizable
+function SkillList() {
+  const skills = ['React', 'JavaScript', 'HTML & CSS', 'Node.js', 'Git'];
+  return (
+    <>
+      <h3>Mis habilidades:</h3>
+      <ul>
+        {skills.map(skill => (
+          <li key={skill}>{skill}</li>
+        ))}
+      </ul>
+    </>
   );
 }
 
@@ -94,6 +143,7 @@ function ProjectDetail({ project, onClose }) {
 // Componente de proyectos
 function Projects() {
   const [selectedProject, setSelectedProject] = useState(null);
+
   const projects = [
     { id: 1, title: 'Proyecto 1', description: 'Una aplicación web de comercio electrónico', image: 'https://via.placeholder.com/300x200' },
     { id: 2, title: 'Proyecto 2', description: 'Un blog personal con CMS personalizado', image: 'https://via.placeholder.com/300x200' },
@@ -127,18 +177,16 @@ function Projects() {
 }
 
 // Componente de contacto
+// Componente de contacto
 function Contact() {
   const [formData, setFormData] = useState({ from_name: '', from_email: '', message: '', reply_to: '' });
   const [status, setStatus] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('Enviando...');
-
     try {
       const result = await emailjs.send(
         process.env.REACT_APP_EMAILJS_SERVICE_ID,
@@ -146,7 +194,6 @@ function Contact() {
         formData,
         process.env.REACT_APP_EMAILJS_PUBLIC_KEY
       );
-
       console.log('Resultado:', result);
       setStatus('Mensaje enviado correctamente!');
       setFormData({ from_name: '', from_email: '', message: '', reply_to: '' });
@@ -160,55 +207,69 @@ function Contact() {
     <section id="contacto" className="section contact full-height">
       <div className="container">
         <h2>Contacto</h2>
-        <form onSubmit={handleSubmit} className="contact-form">
-          <div className="form-group">
-            <label htmlFor="from_name">Nombre:</label>
-            <input
-              type="text"
-              id="from_name"
-              name="from_name"
-              value={formData.from_name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="from_email">Correo electrónico:</label>
-            <input
-              type="email"
-              id="from_email"
-              name="from_email"
-              value={formData.from_email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="message">Mensaje:</label>
-            <textarea
-              id="message"
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="reply_to">Replica del Correo:</label>
-            <input
-              type="email"
-              id="reply_to"
-              name="reply_to"
-              value={formData.reply_to}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <button type="submit" className="btn">Enviar</button>
-          {status && <div className="form-status">{status}</div>}
-        </form>
+        <div className="about-text">
+          <p>
+            Si tienes alguna pregunta o deseas discutir una oportunidad de trabajo, no dudes en contactarme. Estoy disponible y emocionado por nuevas colaboraciones.
+          </p>
+        </div>
+        <div className="contact-box"> {/* Recuadro redondeado */}
+          <form onSubmit={handleSubmit} className="contact-form">
+            <InputField label="Nombre" name="from_name" value={formData.from_name} handleChange={handleChange} />
+            <InputField label="Correo electrónico" name="from_email" value={formData.from_email} handleChange={handleChange} />
+            <TextAreaField label="Mensaje" name="message" value={formData.message} handleChange={handleChange} />
+            <InputField label="Replica del Correo" name="reply_to" value={formData.reply_to} handleChange={handleChange} />
+            <button type="submit" className="btn">Enviar</button>
+            {status && <div className="form-status">{status}</div>}
+          </form>
+        </div>
       </div>
     </section>
+  );
+}
+
+
+// Componente reutilizable para campos de entrada
+function InputField({ label, name, value, handleChange }) {
+  return (
+    <div className="form-group">
+      <label htmlFor={name}>{label}:</label>
+      <input
+        type={name === 'from_email' || name === 'reply_to' ? 'email' : 'text'}
+        id={name}
+        name={name}
+        value={value}
+        onChange={handleChange}
+        required
+      />
+    </div>
+  );
+}
+
+// Componente reutilizable para textarea
+function TextAreaField({ label, name, value, handleChange }) {
+  return (
+    
+    <div className="form-group">
+      
+      <label htmlFor={name}>{label}:</label>
+      <textarea
+        id={name}
+        name={name}
+        value={value}
+        onChange={handleChange}
+        required
+      />
+    </div>
+  );
+}
+function Footer({ theme }) {
+  const footerClass = `footer ${theme}`;
+  return (
+    <footer className={footerClass}>
+      <div className="container footer-container">
+        <p> &copy; {new Date().getFullYear()} Rodrigo Montenegro. Todos los derechos reservados.</p>
+      </div>
+    </footer>
   );
 }
 
@@ -216,13 +277,10 @@ function Contact() {
 function App() {
   const [theme, setTheme] = useState('light');
 
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   useEffect(() => {
-    // Aplicar tema al cargar la página
-    document.body.className = theme;
+    document.body.className = theme; // Aplicar el tema cuando cambie
   }, [theme]);
 
   return (
@@ -232,9 +290,7 @@ function App() {
       <About />
       <Projects />
       <Contact />
-      <footer>
-        <p>&copy; 2024 Mi Portafolio. Todos los derechos reservados.</p>
-      </footer>
+      <Footer theme={theme} /> {/* Añadir el footer aquí */}
     </div>
   );
 }

@@ -7,14 +7,13 @@ body {
 }
 
 h1, h2, h3 {
-  min-height: 50px; /* Cambia este valor según sea necesario */
+  min-height: 50px; 
   display: flex;
-  align-items: center; /* Centra verticalmente el texto */
-  justify-content: center; /* Centra horizontalmente el texto */
-  margin: 0; /* Elimina márgenes para un mejor control */
-  padding: 1rem 0; /* Añade espacio vertical alrededor del título */
+  align-items: center; 
+  justify-content: center; 
+  margin: 0; 
+  padding: 1rem 0; 
 }
-
 
 .container {
   max-width: 1200px;
@@ -41,8 +40,8 @@ header {
   width: 100%;
   background-color: #ffffff;
   padding: 10px 0;
-  z-index: 1000; /* Asegura que el header esté sobre otros elementos */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Añade sombra para destacarlo */
+  z-index: 1000; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
 }
 
 .header.light {
@@ -59,11 +58,7 @@ header {
   align-items: center;
 }
 
-.header-name {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
+/* Navegación */
 .header-nav ul {
   display: flex;
   list-style-type: none;
@@ -101,7 +96,7 @@ header {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  flex-direction: column; /* Centra los contenidos en columnas */
+  flex-direction: column; 
 }
 
 /* Home */
@@ -111,18 +106,19 @@ header {
 
 .home h1 {
   font-size: 2.5rem;
-  margin-bottom: 1rem; /* Ajusta el espaciado inferior si es necesario */
+  margin-bottom: 1rem; 
 }
 
 /* About */
 .about {
-  text-align: center; /* Alineación central para títulos de sección */
+  text-align: center; 
 }
 
 .about-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas más pequeñas */
 }
 
 .about-text {
@@ -137,14 +133,14 @@ header {
 
 /* Projects */
 .projects {
-  text-align: center; /* Alineación central para títulos de sección */
+  text-align: center; 
 }
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columnas en pantallas grandes */
-  gap: 20px; /* Espacio entre las tarjetas */
-  padding: 20px; /* Espacio alrededor de la cuadrícula */
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 20px; 
+  padding: 20px; 
 }
 
 .project-card {
@@ -245,28 +241,25 @@ header {
 }
 
 /* Estilo para listas en general */
-/* Ensure that bullet points are aligned to the left */
 ul {
-  list-style-position: inside; /* Moves bullet points inside the content box */
-  padding-left: 0; /* Removes default padding on the left */
-  margin-left: 0; /* Ensures no extra margin on the left */
+  list-style-position: inside; 
+  padding-left: 0; 
+  margin-left: 0; 
 }
 
 li {
-  margin-bottom: 0.5rem; /* Adds some space between each item */
-  text-align: left; /* Ensures text alignment to the left */
+  margin-bottom: 0.5rem; 
+  text-align: left; 
 }
 
-
-
 ul li::marker {
-  font-size: 1rem; /* Ajusta el tamaño del punto */
-  margin-right: 10px; /* Ajusta el espacio entre el punto y el texto */
+  font-size: 1rem; 
+  margin-right: 10px; 
 }
 
 /* Contact */
 .contact {
-  text-align: center; /* Alineación central para títulos de sección */
+  text-align: center; 
 }
 
 .contact-form {
@@ -296,12 +289,6 @@ ul li::marker {
   background-color: #444444;
   color: #ffffff;
   border-color: #666666;
-}
-
-.dark .form-group input,
-.dark .form-group textarea {
-  background-color: #555555;
-  color: #ffffff;
 }
 
 /* Footer */
@@ -339,6 +326,17 @@ ul li::marker {
   background-color: #007bff;
 }
 
+/* Prueba */
+.prueba {
+  display: flex;
+  justify-content: center;  /* Centra horizontalmente */
+  align-items: center;      /* Centra verticalmente */
+  height: 120vh;            /* Usar 100vh para ocupar toda la altura de la ventana */
+  width: 100%;              /* Asegúrate de que ocupe el 100% del ancho */
+  padding: 20px;            /* Añade padding para un mejor espaciado */
+  box-sizing: border-box;   /* Incluye padding en el cálculo del ancho */
+}
+
 /* Media queries para responsividad */
 @media (max-width: 768px) {
   .header-nav {
@@ -350,9 +348,30 @@ ul li::marker {
     padding: 0.1rem;
   }
 
+  .prueba {
+    height: 60vh;           /* Ajusta la altura en pantallas más pequeñas */
+    padding: 10px;          /* Reduce el padding si es necesario */
+  }
+  
+  h1, h2, h3 {
+    min-height: 40px; 
+    display: flex;
+    align-items: center; 
+    justify-content: center; 
+    margin: 0; 
+    padding: 1rem 0; 
+  }
+
+  .container {
+    max-width: 100%; /* Ajuste a 100% en pantallas pequeñas */
+    margin: 0 auto;
+    padding: 0 20px;
+    min-height: 10px; 
+  }
+
   .header-nav.open {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.56rem;
   }
 
   .header-nav ul {
@@ -360,7 +379,7 @@ ul li::marker {
   }
 
   .header-nav li {
-    margin: 0.5rem 0;
+    margin: 0.3rem 0;
   }
 
   .menu-toggle-btn {
@@ -368,15 +387,37 @@ ul li::marker {
   }
 
   .about-content {
-    flex-direction: column;
+    flex-direction: column; /* Alineación vertical en pantallas pequeñas */
   }
 
   .about-text {
-    margin-right: 0;
-    margin-bottom: 2rem;
+    margin-right: 0; /* Elimina el margen en pantallas pequeñas */
+    margin-bottom: 1rem; /* Espaciado entre textos */
   }
-  
+
   .projects-grid {
-    grid-template-columns: 1fr; /* 1 columna en pantallas pequeñas */
+    grid-template-columns: repeat(1, 1fr); /* Cambia a una sola columna en pantallas pequeñas */
+  }
+
+  .modal-content {
+    width: 90%; /* Más ancho en pantallas pequeñas */
+  }
+}
+
+@media (max-width: 480px) {
+  .header-nav li {
+    margin: 0.2rem 0;
+  }
+
+  .project-card h3 {
+    font-size: 1.2rem; /* Tamaño más pequeño para pantallas pequeñas */
+  }
+
+  .project-detail {
+    padding: 2rem 0; /* Ajuste de padding en pantallas pequeñas */
+  }
+  .prueba {
+    height: 50vh;           /* Ajusta aún más en pantallas muy pequeñas */
+    font-size: 0.8rem;      /* Ajusta el tamaño de fuente si es necesario */
   }
 }

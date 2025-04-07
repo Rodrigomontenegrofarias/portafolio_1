@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
-import latestTag from './latestTag.txt'; // Just import the file
+//import latestTag from './latestTag.txt'; // Just import the file
 
 // Componente de fondo de partículas
 const ParticleBackground = ({ theme }) => {

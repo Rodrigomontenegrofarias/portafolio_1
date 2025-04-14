@@ -96,18 +96,12 @@ stages:
     - checkout: self
       fetchDepth: 0
       
-    # Dentro del job BuildAndDeploy, después del checkout y antes del npm install:
     - script: |
         echo "Preparando despliegue de versión: $(deployTag)"
         if [ "$(deployTag)" != "main" ]; then
           git checkout $(deployTag)
         fi
-        
-        # Crear un archivo con la información del tag para que React lo use
-        echo "export const APP_VERSION = '$(deployTag)';" > src/version.js
-        echo "export const BUILD_DATE = '$(date)';" >> src/version.js
-        displayName: 'Checkout al tag seleccionado y generar información de versión'
-      
+      displayName: 'Checkout al tag seleccionado'
       
     - task: NodeTool@0
       inputs:

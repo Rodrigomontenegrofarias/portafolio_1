@@ -1,13 +1,17 @@
+# Trigger automático para cambios en main
 trigger:
+  branches:
+    include:
+      - main
   tags:
     include:
       - V*
 
+# Trigger para Pull Requests hacia main
 pr:
-  branches:
-    include:
-      - main
+- main
 
+# Parámetros para seleccionar el tag a desplegar
 parameters:
   - name: deployMode
     displayName: 'Modo de despliegue'
@@ -17,6 +21,11 @@ parameters:
       - latest
       - specific
       - previous
+  
+  - name: specificTag
+    displayName: 'Tag específico (solo si el modo es "specific")'
+    type: string
+    default: ''
 
 pool:
   name: Default
@@ -32,11 +41,49 @@ stages:
     displayName: 'Seleccionar tag para despliegue'
     steps:
     - checkout: self
-      fetchDepth: 0
+      fetchDepth: 0  # Obtiene todo el historial y tags
       
     - script: |
+        # Obtener la lista de tags ordenados por fecha (más reciente primero)
         ALL_TAGS=$(git tag --sort=-committerdate)
-        # Lógica para seleccionar el tag...
+        
+        # Establecer el tag que se va a usar según el modo seleccionado
+        if [ "${{ parameters.deployMode }}" == "latest" ]; then
+          # Usar el último tag
+          DEPLOY_TAG=$(echo "$ALL_TAGS" | head -n 1)
+          if [ -z "$DEPLOY_TAG" ]; then
+            echo "No se encontraron tags. Usando la versión actual de main."
+            DEPLOY_TAG="main"
+          else
+            echo "Usando último tag: $DEPLOY_TAG"
+          fi
+        
+        elif [ "${{ parameters.deployMode }}" == "specific" ]; then
+          # Usar el tag específico indicado
+          DEPLOY_TAG="${{ parameters.specificTag }}"
+          if [ -z "$DEPLOY_TAG" ]; then
+            echo "##vso[task.logissue type=error]No se especificó un tag específico."
+            exit 1
+          fi
+          echo "Usando tag específico: $DEPLOY_TAG"
+        
+        elif [ "${{ parameters.deployMode }}" == "previous" ]; then
+          # Usar la versión anterior al último tag
+          DEPLOY_TAG=$(echo "$ALL_TAGS" | head -n 2 | tail -n 1)
+          if [ -z "$DEPLOY_TAG" ]; then
+            echo "##vso[task.logissue type=error]No hay un tag anterior disponible."
+            exit 1
+          fi
+          echo "Usando tag anterior: $DEPLOY_TAG"
+        fi
+        
+        # Verificar que el tag existe si no es main
+        if [ "$DEPLOY_TAG" != "main" ] && ! git rev-parse "$DEPLOY_TAG" >/dev/null 2>&1; then
+          echo "##vso[task.logissue type=error]El tag $DEPLOY_TAG no existe."
+          exit 1
+        fi
+        
+        # Establecer la variable para usarla en los siguientes pasos
         echo "##vso[task.setvariable variable=tagToUse;isOutput=true]$DEPLOY_TAG"
       displayName: 'Determinar tag a desplegar'
       name: tagSelection
@@ -49,11 +96,6 @@ stages:
     - checkout: self
       fetchDepth: 0
       
-    - script: |
-        echo "Actualizando latestTag.txt con la nueva versión..."
-        echo "$(deployTag)" > latestTag.txt
-      displayName: 'Actualizar latestTag.txt con el nuevo tag'
-
     - script: |
         echo "Preparando despliegue de versión: $(deployTag)"
         if [ "$(deployTag)" != "main" ]; then
@@ -91,6 +133,7 @@ stages:
 
     # ✅ Desplegar a Netlify
     - script: |
+        # Añadir información del tag al título del despliegue
         DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
         
         curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \

@@ -1,6 +1,10 @@
 trigger:
 - main
 
+# Trigger para Pull Requests hacia main
+pr:
+- main
+
 pool:
   name: Default
 

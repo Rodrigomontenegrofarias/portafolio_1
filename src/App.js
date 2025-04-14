@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
-import latestTag from './latestTag.txt'; // Just import the file
+//import latestTag from './latestTag.txt'; // Just import the file
 
 // Componente de fondo de partículas
 const ParticleBackground = ({ theme }) => {
@@ -267,9 +267,9 @@ function Home() {
         </div>
       </div>
       
-      {process.env.REACT_APP_TAG && (
+      {tagContent && (
         <div className="version-tag">
-          <p>Versión: {process.env.REACT_APP_TAG}</p>
+          <p>Versión: {tagContent}</p>
         </div>
       )}
     </section>

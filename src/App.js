@@ -267,9 +267,9 @@ function Home() {
         </div>
       </div>
       
-      {tagContent && (
+      {process.env.REACT_APP_TAG && (
         <div className="version-tag">
-          <p>Versión: {tagContent}</p>
+          <p>Versión: {process.env.REACT_APP_TAG}</p>
         </div>
       )}
     </section>

@@ -5,7 +5,7 @@ trigger:
       - main
   tags:
     include:
-      - v*
+      - V*
 
 # Trigger para Pull Requests hacia main
 pr:

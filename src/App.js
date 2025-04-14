@@ -4,6 +4,7 @@ import emailjs from '@emailjs/browser';
 import './App.css';
 import latestTag from './latestTag.txt'; // Just import the file
 
+// Importa la librería de EmailJS
 // Componente de fondo de partículas
 const ParticleBackground = ({ theme }) => {
   const canvasRef = useRef(null);

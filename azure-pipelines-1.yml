@@ -113,7 +113,7 @@ stages:
           REACT_APP_EMAILJS_SERVICE_ID=service_199ivdm
           REACT_APP_EMAILJS_TEMPLATE_ID=template_8kjbi9b
           REACT_APP_EMAILJS_PUBLIC_KEY=OMXAbEih8zZ-MsYY5
-          REACT_APP_TAG=${deployTag}
+          REACT_APP_TAG=${DEPLOY_TAG}
           " > .env
         npm install
         npm run build
@@ -140,7 +140,7 @@ stages:
     # ✅ Desplegar a Netlify
     - script: |
         # Añadir información del tag al título del despliegue
-        DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
+        DEPLOY_TITLE="Deploy $(DEPLOY_TAG) from Azure DevOps"
         
         curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
         -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \

@@ -109,15 +109,18 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
-        echo "
-          REACT_APP_EMAILJS_SERVICE_ID=service_199ivdm
-          REACT_APP_EMAILJS_TEMPLATE_ID=template_8kjbi9b
-          REACT_APP_EMAILJS_PUBLIC_KEY=OMXAbEih8zZ-MsYY5
-          REACT_APP_TAG=${DEPLOY_TAG}
-          " > .env
+        echo "REACT_APP_EMAILJS_SERVICE_ID=service_199ivdm" > .env
+        echo "REACT_APP_EMAILJS_TEMPLATE_ID=template_8kjbi9b" >> .env
+        echo "REACT_APP_EMAILJS_PUBLIC_KEY=OMXAbEih8zZ-MsYY5" >> .env
+        echo "REACT_APP_TAG=$(deployTag)" >> .env
+
+        echo "Contenido del .env generado:"
+        cat .env
+
         npm install
         npm run build
       displayName: 'npm install and build'
+
 
     # ✅ Archivar build
     - task: ArchiveFiles@2

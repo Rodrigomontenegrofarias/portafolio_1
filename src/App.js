@@ -255,6 +255,7 @@ function Home() {
     
     fetchTag(); // Llama a la función para cargar la etiqueta
   }, []); // Solo se ejecuta una vez al montar el componente
+  
   return (
     <section id="inicio" className="section home full-height">
       <div className="container home-container">
@@ -282,9 +283,9 @@ function Home() {
         </div>
       </div>
       
-      {process.env.REACT_APP_TAG && (
+      {tagContent && (
         <div className="version-tag">
-          <p>Versión: {process.env.REACT_APP_TAG}</p>
+          <p>Versión: {TAG}</p>
         </div>
       )}
     </section>

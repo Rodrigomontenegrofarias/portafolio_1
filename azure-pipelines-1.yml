@@ -127,29 +127,15 @@ stages:
         publishLocation: 'Container'
       displayName: 'Publish build artifact'
 
-    # Desplegar a Netlify
+    # ✅ Desplegar a Netlify
     - script: |
         # Añadir información del tag al título del despliegue
         DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
         
-        echo "Desplegando a Netlify: $DEPLOY_TITLE"
-        
-        # Despliegue usando la API de Netlify
-        DEPLOY_OUTPUT=$(curl -X POST -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
-          -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \
-          -F "title=$DEPLOY_TITLE" \
-          https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys)
-        
-        echo "Respuesta de Netlify: $DEPLOY_OUTPUT"
-        
-        # Extraer y mostrar la URL de despliegue
-        DEPLOY_URL=$(echo $DEPLOY_OUTPUT | grep -o '"deploy_url":"[^"]*"' | cut -d'"' -f4)
-        if [ ! -z "$DEPLOY_URL" ]; then
-          echo "Despliegue disponible en: $DEPLOY_URL"
-          echo "##vso[task.complete result=Succeeded;]Despliegue completado exitosamente."
-        else
-          echo "##vso[task.logissue type=warning]No se pudo obtener la URL de despliegue."
-        fi
+        curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
+        -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
+        -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \
+        -F "title=$DEPLOY_TITLE"
       displayName: 'Deploy to Netlify'
       env:
         NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)

@@ -56,6 +56,7 @@ steps:
         curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
         -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
         -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \
+        -F "clear_cache=true" \
         -F "title=$DEPLOY_TITLE"
       displayName: 'Deploy to Netlify'
       env:

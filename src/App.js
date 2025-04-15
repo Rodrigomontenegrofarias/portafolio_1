@@ -284,7 +284,7 @@ function Home() {
       
       {tagContent && (
         <div className="version-tag">
-          <p>Versión: {latestTag}</p>
+          <p>Versión: {tagContent}</p>
         </div>
       )}
     </section>

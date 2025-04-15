@@ -36,26 +36,31 @@ stages:
       
     - script: |
         # Verificar que el tag existe
+        echo "Listando todos los tags disponibles en el repositorio:"
+        git tag -l
+
+        echo "Verificando si existe el tag: ${{ parameters.deployTag }}"
         if ! git rev-parse "${{ parameters.deployTag }}" >/dev/null 2>&1; then
-          echo "##vso[task.logissue type=error]El tag ${{ parameters.deployTag }} no existe en el repositorio."
+          echo "##[error]El tag ${{ parameters.deployTag }} no existe en el repositorio."
+          echo "##[error]Tags disponibles:"
+          git tag -l
           exit 1
         fi
-        
+
         # Hacer checkout al tag especificado
         echo "Preparando despliegue del tag: ${{ parameters.deployTag }}"
         git checkout ${{ parameters.deployTag }}
-        
+
         # Verificar que estamos en el tag correcto
         CURRENT_COMMIT=$(git rev-parse HEAD)
         TAG_COMMIT=$(git rev-parse ${{ parameters.deployTag }})
-        
+
         if [ "$CURRENT_COMMIT" != "$TAG_COMMIT" ]; then
-          echo "##vso[task.logissue type=error]No se pudo hacer checkout al tag ${{ parameters.deployTag }}."
+          echo "##[error]No se pudo hacer checkout al tag ${{ parameters.deployTag }}."
           exit 1
         fi
-        
+
         echo "Checkout exitoso al tag ${{ parameters.deployTag }} (commit: $CURRENT_COMMIT)"
-      displayName: 'Checkout al tag seleccionado'
       
     - task: NodeTool@0
       inputs:

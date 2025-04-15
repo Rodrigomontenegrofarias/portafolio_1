@@ -1,8 +1,8 @@
 # Trigger automático solo para tags
 trigger:
   branches:
-    exclude:
-      - '*'  # Excluye todas las ramas
+    include:
+      - main  # Excluye todas las ramas
   tags:
     include:
       - V*

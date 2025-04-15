@@ -17,6 +17,7 @@ parameters:
     displayName: 'Tag a desplegar'
     type: string
     default: ''
+    required: true  # Hace que el parámetro sea obligatorio
 
 pool:
   name: Default
@@ -31,6 +32,7 @@ stages:
     steps:
     - checkout: self
       fetchDepth: 0  # Obtiene todo el historial y tags
+      clean: true    # Asegura un checkout limpio
       
     - script: |
         # Verificar que el tag existe
@@ -42,6 +44,17 @@ stages:
         # Hacer checkout al tag especificado
         echo "Preparando despliegue del tag: ${{ parameters.deployTag }}"
         git checkout ${{ parameters.deployTag }}
+        
+        # Verificar que estamos en el tag correcto
+        CURRENT_COMMIT=$(git rev-parse HEAD)
+        TAG_COMMIT=$(git rev-parse ${{ parameters.deployTag }})
+        
+        if [ "$CURRENT_COMMIT" != "$TAG_COMMIT" ]; then
+          echo "##vso[task.logissue type=error]No se pudo hacer checkout al tag ${{ parameters.deployTag }}."
+          exit 1
+        fi
+        
+        echo "Checkout exitoso al tag ${{ parameters.deployTag }} (commit: $CURRENT_COMMIT)"
       displayName: 'Checkout al tag seleccionado'
       
     - task: NodeTool@0
@@ -49,13 +62,16 @@ stages:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
+    # Crear un archivo .env para exponer el tag a la aplicación React
+    - script: |
+        echo "REACT_APP_TAG=${{ parameters.deployTag }}" > .env
+        cat .env
+      displayName: 'Create .env file with tag info'
+
     - script: |
         npm install
-        export REACT_APP_TAG="${{ parameters.deployTag }}"
         npm run build
       displayName: 'npm install and build'
-      env:
-        REACT_APP_TAG: ${{ parameters.deployTag }}
 
     # Archivar build
     - task: ArchiveFiles@2
@@ -75,15 +91,26 @@ stages:
         publishLocation: 'Container'
       displayName: 'Publish build artifact'
 
-    # Desplegar a Netlify
+    # Desplegar directamente a Netlify desde el ZIP
     - script: |
         # Añadir información del tag al título del despliegue
         DEPLOY_TITLE="Deploy ${{ parameters.deployTag }} from Azure DevOps"
         
-        curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
-        -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
-        -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \
-        -F "title=$DEPLOY_TITLE"
+        echo "Desplegando a Netlify: $DEPLOY_TITLE"
+        
+        # Despliegue usando la API de Netlify
+        DEPLOY_OUTPUT=$(curl -X POST -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
+          -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \
+          -F "title=$DEPLOY_TITLE" \
+          https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys)
+        
+        echo "Respuesta de Netlify: $DEPLOY_OUTPUT"
+        
+        # Extraer y mostrar la URL de despliegue
+        DEPLOY_URL=$(echo $DEPLOY_OUTPUT | grep -o '"deploy_url":"[^"]*"' | cut -d'"' -f4)
+        if [ ! -z "$DEPLOY_URL" ]; then
+          echo "Despliegue disponible en: $DEPLOY_URL"
+        fi
       displayName: 'Deploy to Netlify'
       env:
         NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)

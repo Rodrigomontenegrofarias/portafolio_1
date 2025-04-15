@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main  # Excluye todas las ramas
+      - main
 #  tags:
 #    include:
 #      - V*
@@ -84,113 +84,145 @@ stages:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    # Crear directorios necesarios si no existen
+    # PASO 1: Modificar el archivo App.js para reemplazar APP_VERSION con window.APP_VERSION
     - script: |
-        mkdir -p public
-        mkdir -p src
-        mkdir -p scripts
-      displayName: 'Crear directorios si no existen'
+        echo "Modificando App.js para usar window.APP_VERSION..."
+        
+        # Verificar si App.js existe
+        if [ ! -f "src/App.js" ]; then
+            echo "##[error]El archivo src/App.js no existe."
+            exit 1
+        fi
+        
+        # Crear una copia de respaldo
+        cp src/App.js src/App.js.bak
+        
+        # Reemplazar las instancias de APP_VERSION con window.APP_VERSION o appVersion
+        sed -i 's/APP_VERSION/window.APP_VERSION/g' src/App.js
+        
+        echo "Archivo App.js modificado correctamente."
+      displayName: 'Modificar App.js para usar window.APP_VERSION'
+      continueOnError: true  # Continuar incluso si este paso falla
 
-    # Crear archivos de configuración para exponer el tag a la aplicación React
+    # PASO 2: Crear archivos para almacenar la versión
     - script: |
-        # Crear archivo .env
+        echo "Configurando archivos de versión con el tag: $(deployTag)"
+        
+        # Crear .env para Create React App
         echo "REACT_APP_VERSION=$(deployTag)" > .env
         
-        # Crear carpeta scripts si no existe
-        mkdir -p scripts
+        # Crear src/version.js para importar en el código
+        echo "export const APP_VERSION = '$(deployTag)';" > src/version.js
         
-        # Crear script setTag.js
-        cat > scripts/setTag.js << 'EOF'
-const fs = require('fs');
-const path = require('path');
-
-// Obtener la versión de la variable de entorno
-let appVersion = process.env.REACT_APP_VERSION;
-
-// Si no existe, intentar obtenerla del archivo .env
-if (!appVersion) {
-  try {
-    const envFilePath = path.resolve(process.cwd(), '.env');
-    if (fs.existsSync(envFilePath)) {
-      const envContent = fs.readFileSync(envFilePath, 'utf8');
-      const versionMatch = envContent.match(/REACT_APP_VERSION=(.+)/);
-      if (versionMatch && versionMatch[1]) {
-        appVersion = versionMatch[1];
-      }
-    }
-  } catch (error) {
-    console.warn('Error al leer archivo .env:', error);
-  }
-}
-
-// Si todavía no existe, usar valor por defecto
-if (!appVersion) {
-  appVersion = 'v0.0.0';
-}
-
-console.log(`Configurando versión de aplicación: ${appVersion}`);
-
-// Crear archivo env.js en la carpeta public
-const envJsPath = path.resolve(process.cwd(), 'public', 'env.js');
-const envJsContent = `// Archivo generado automáticamente por setTag.js
-window.APP_VERSION = "${appVersion}";
-console.log("Versión de aplicación cargada:", window.APP_VERSION);
-`;
-
-// Escribir el archivo
-fs.writeFileSync(envJsPath, envJsContent);
-console.log(`Archivo env.js creado en: ${envJsPath}`);
-
-// También crear un archivo latestTag.txt para tener la versión disponible de otra manera
-try {
-  const tagPath = path.resolve(process.cwd(), 'src', 'latestTag.txt');
-  fs.writeFileSync(tagPath, appVersion);
-  console.log(`Archivo latestTag.txt creado en: ${tagPath}`);
-} catch (error) {
-  console.error('Error al crear archivo latestTag.txt:', error);
-}
-EOF
+        # Crear env.js para inyectar en window
+        mkdir -p public
+        echo "// Auto-generado por Azure DevOps pipeline" > public/env.js
+        echo "window.APP_VERSION = '$(deployTag)';" >> public/env.js
         
-        # Ejecutar el script de setTag directamente para generar los archivos
-        node scripts/setTag.js
+        # También crear latestTag.txt como respaldo
+        echo "$(deployTag)" > src/latestTag.txt
         
-        # Verificar que los archivos se han creado correctamente
+        # Mostrar los archivos creados
         echo "Contenido de .env:"
         cat .env
-        
+        echo "Contenido de src/version.js:"
+        cat src/version.js
         echo "Contenido de public/env.js:"
-        cat public/env.js || echo "El archivo public/env.js no existe"
-        
-        echo "Contenido de src/latestTag.txt:"
-        cat src/latestTag.txt || echo "El archivo src/latestTag.txt no existe"
-      displayName: 'Crear archivos de configuración con tag info'
+        cat public/env.js
+        echo "Contenido de latestTag.txt:"
+        cat src/latestTag.txt
+      displayName: 'Crear archivos de versión'
 
-    # Asegurarnos de que netlify no vuelva a construir la aplicación
+    # PASO 3: Modificar el archivo index.html para incluir env.js
     - script: |
-        # Crear netlify.toml en la raíz
-        echo "[build]" > netlify.toml
-        echo "  publish = \"build\"" >> netlify.toml
-        echo "  command = \"echo 'Site has been pre-built during Azure DevOps CI process'\"" >> netlify.toml
-        cat netlify.toml
-      displayName: 'Crear configuración de Netlify'
+        echo "Modificando index.html para incluir env.js..."
+        
+        if [ -f "public/index.html" ]; then
+            # Crear una copia de respaldo
+            cp public/index.html public/index.html.bak
+            
+            # Verificar si ya contiene la referencia a env.js
+            if grep -q "env.js" public/index.html; then
+                echo "public/index.html ya incluye env.js, no es necesario modificarlo."
+            else
+                # Insertar la referencia antes de </head>
+                sed -i 's#</head>#    <script src="%PUBLIC_URL%/env.js"></script>\n  </head>#' public/index.html
+                echo "public/index.html modificado para incluir env.js."
+            fi
+        else
+            echo "##[warning]El archivo public/index.html no existe. Creando uno nuevo."
+            mkdir -p public
+            cat > public/index.html << 'EOL'
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Portafolio de Rodrigo Montenegro - DevOps Engineer" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <script src="%PUBLIC_URL%/env.js"></script>
+    <title>Rodrigo Montenegro | DevOps Engineer</title>
+  </head>
+  <body>
+    <noscript>Necesitas habilitar JavaScript para ejecutar esta aplicación.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
+EOL
+            echo "Nuevo index.html creado con referencia a env.js."
+        fi
+      displayName: 'Modificar index.html para incluir env.js'
 
-    # Instalar dependencias y construir la aplicación
+    # PASO 4: Crear archivo netlify.toml para evitar build en Netlify
+    - script: |
+        echo "Creando archivo netlify.toml..."
+        cat > netlify.toml << 'EOL'
+[build]
+  publish = "build"
+  command = "echo 'Sitio pre-construido en Azure DevOps - Omitiendo build en Netlify'"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+EOL
+        echo "Archivo netlify.toml creado:"
+        cat netlify.toml
+      displayName: 'Crear archivo netlify.toml'
+
+    # PASO 5: Instalar dependencias y construir
     - script: |
         npm install
-        REACT_APP_VERSION=$(deployTag) npm run build
-      displayName: 'npm install and build'
+      displayName: 'npm install'
+      
+    - script: |
+        echo "Construyendo la aplicación con la versión $(deployTag)..."
+        REACT_APP_VERSION="$(deployTag)" npm run build
+      displayName: 'npm run build'
       env:
         REACT_APP_VERSION: $(deployTag)
         REACT_APP_EMAILJS_PUBLIC_KEY: $(REACT_APP_EMAILJS_PUBLIC_KEY)
         REACT_APP_EMAILJS_SERVICE_ID: $(REACT_APP_EMAILJS_SERVICE_ID)
         REACT_APP_EMAILJS_TEMPLATE_ID: $(REACT_APP_EMAILJS_TEMPLATE_ID)
 
-    # Copiar netlify.toml al directorio de build
+    # PASO 6: Confirmar que netlify.toml esté en el directorio de build
     - script: |
+        echo "Copiando netlify.toml al directorio de build..."
         cp netlify.toml build/
-      displayName: 'Copiar netlify.toml a build'
+        
+        # También copiar env.js para estar seguros
+        echo "Confirmando que env.js está en el directorio de build..."
+        if [ ! -f "build/env.js" ]; then
+            cp public/env.js build/
+        fi
+        
+        echo "Contenido del directorio de build:"
+        ls -la build/
+      displayName: 'Confirmar archivos en directorio de build'
 
-    # Archivar build
+    # PASO 7: Archivar build
     - task: ArchiveFiles@2
       inputs:
         rootFolderOrFile: '$(System.DefaultWorkingDirectory)/$(buildDir)'
@@ -200,7 +232,7 @@ EOF
         replaceExistingArchive: true
       displayName: 'Archive React build folder'
 
-    # Publicar artefacto
+    # PASO 8: Publicar artefacto
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/build.zip'
@@ -208,11 +240,14 @@ EOF
         publishLocation: 'Container'
       displayName: 'Publish build artifact'
 
-    # Desplegar a Netlify
+    # PASO 9: Desplegar a Netlify
     - script: |
         # Añadir información del tag al título del despliegue
         DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
         
+        echo "Desplegando a Netlify con título: $DEPLOY_TITLE"
+        
+        # Desplegar usando la API de Netlify
         curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
         -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
         -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \

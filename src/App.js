@@ -1,3 +1,5 @@
+
+
 // Libreria
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
@@ -5,6 +7,10 @@ import './App.css';
 import latestTag from './latestTag.txt'; // Just import the file
 // Importamos la versión si existe
 //let APP_VERSION = process.env.REACT_APP_TAG || 'Desarrollo';
+import { APP_VERSION } from './AppVersion';
+
+// Variable para la versión - centralizada para toda la aplicación
+const appVersion = APP_VERSION;
 
 // Intentamos cargar la versión desde un archivo generado por el script de build
 try {
@@ -282,9 +288,9 @@ function Home() {
       
       {/* Mostrar el tag de versión si está disponible */}
       
-        <div className="version-tag">
-          <p>Versión: {latestTag}</p>
-        </div>
+      <div className="version-tag">
+        <p>Versión: {appVersion}</p>
+      </div>
     </section>
   );
 }
@@ -685,7 +691,7 @@ function Footer({ theme }) {
       <div className="container footer-container">
         <p> &copy; {new Date().getFullYear()} Rodrigo Montenegro. Todos los derechos reservados.</p>
         {/* Mostrar versión en el footer también */}
-        <p className="footer-version">Versión: {APP_VERSION}</p>
+        <p className="footer-version">Versión: {appVersion}</p>
       </div>
     </footer>
   );
@@ -699,8 +705,8 @@ function App() {
 
   useEffect(() => {
     document.body.className = theme; // Aplicar el tema cuando cambie
-    
     // Mostrar versión en la consola para depuración
+    
     console.log(`Aplicación iniciada - Versión: ${APP_VERSION}`);
   }, [theme]);
 

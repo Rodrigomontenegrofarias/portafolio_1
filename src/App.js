@@ -1,27 +1,8 @@
-
-
-// Libreria
+// Libreria 1
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
 import latestTag from './latestTag.txt'; // Just import the file
-// Importamos la versión si existe
-//let APP_VERSION = process.env.REACT_APP_TAG || 'Desarrollo';
-import { APP_VERSION } from './AppVersion';
-
-// Variable para la versión - centralizada para toda la aplicación
-const appVersion = APP_VERSION;
-
-// Intentamos cargar la versión desde un archivo generado por el script de build
-try {
-  // Importamos dinámicamente - esto funcionará si el script setTag.js creó el archivo
-  const versionModule = require('./version');
-  if (versionModule && versionModule.APP_VERSION) {
-    APP_VERSION = versionModule.APP_VERSION;
-  }
-} catch (e) {
-  console.log('Usando versión de variable de entorno');
-}
 
 // Componente de fondo de partículas
 const ParticleBackground = ({ theme }) => {
@@ -286,11 +267,11 @@ function Home() {
         </div>
       </div>
       
-      {/* Mostrar el tag de versión si está disponible */}
-      
-      <div className="version-tag">
-        <p>Versión: {appVersion}</p>
-      </div>
+      {process.env.REACT_APP_TAG && (
+        <div className="version-tag">
+          <p>Versión: {process.env.REACT_APP_TAG}</p>
+        </div>
+      )}
     </section>
   );
 }
@@ -522,6 +503,7 @@ function Projects() {
 }
 
 // Componente de contacto modernizado
+// Componente de contacto modernizado
 function Contact() {
   const [formData, setFormData] = useState({ 
     from_name: '', 
@@ -690,8 +672,6 @@ function Footer({ theme }) {
     <footer className={footerClass}>
       <div className="container footer-container">
         <p> &copy; {new Date().getFullYear()} Rodrigo Montenegro. Todos los derechos reservados.</p>
-        {/* Mostrar versión en el footer también */}
-        <p className="footer-version">Versión: {appVersion}</p>
       </div>
     </footer>
   );
@@ -705,9 +685,6 @@ function App() {
 
   useEffect(() => {
     document.body.className = theme; // Aplicar el tema cuando cambie
-    // Mostrar versión en la consola para depuración
-    
-    console.log(`Aplicación iniciada - Versión: ${APP_VERSION}`);
   }, [theme]);
 
   return (

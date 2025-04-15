@@ -84,119 +84,94 @@ stages:
         versionSpec: '18.x'
       displayName: 'Install Node.js'
 
-    # PASO 1: Modificar el archivo App.js para reemplazar APP_VERSION con window.APP_VERSION
+    # Crear archivos necesarios para la versión
     - script: |
-        echo "Modificando App.js para usar window.APP_VERSION..."
+        echo "Configurando archivos para la versión: $(deployTag)"
         
-        # Verificar si App.js existe
-        if [ ! -f "src/App.js" ]; then
-            echo "##[error]El archivo src/App.js no existe."
-            exit 1
-        fi
-        
-        # Crear una copia de respaldo
-        cp src/App.js src/App.js.bak
-        
-        # Reemplazar las instancias de APP_VERSION con window.APP_VERSION o appVersion
-        sed -i 's/APP_VERSION/window.APP_VERSION/g' src/App.js
-        
-        echo "Archivo App.js modificado correctamente."
-      displayName: 'Modificar App.js para usar window.APP_VERSION'
-      continueOnError: true  # Continuar incluso si este paso falla
-
-    # PASO 2: Crear archivos para almacenar la versión
-    - script: |
-        echo "Configurando archivos de versión con el tag: $(deployTag)"
-        
-        # Crear .env para Create React App
-        echo "REACT_APP_VERSION=$(deployTag)" > .env
-        
-        # Crear src/version.js para importar en el código
-        echo "export const APP_VERSION = '$(deployTag)';" > src/version.js
-        
-        # Crear env.js para inyectar en window
+        # Crear directorios si no existen
+        mkdir -p src
         mkdir -p public
-        echo "// Auto-generado por Azure DevOps pipeline" > public/env.js
-        echo "window.APP_VERSION = '$(deployTag)';" >> public/env.js
+        mkdir -p scripts
         
-        # También crear latestTag.txt como respaldo
+        # 1. Crear archivo AppVersion.js
+        cat > src/AppVersion.js << 'EOL'
+// AppVersion.js - Define la versión de la aplicación
+import latestTag from './latestTag.txt';
+
+// Define APP_VERSION globalmente para que esté disponible en todo el código
+window.APP_VERSION = latestTag || process.env.REACT_APP_VERSION || 'Desarrollo';
+
+// Para compatibilidad con el código existente, también lo definimos como una variable
+// eslint-disable-next-line
+var APP_VERSION = window.APP_VERSION;
+
+console.log('Versión de la aplicación:', APP_VERSION);
+
+export default APP_VERSION;
+EOL
+        
+        # 2. Crear archivo latestTag.txt
         echo "$(deployTag)" > src/latestTag.txt
         
-        # Mostrar los archivos creados
-        echo "Contenido de .env:"
-        cat .env
-        echo "Contenido de src/version.js:"
-        cat src/version.js
-        echo "Contenido de public/env.js:"
-        cat public/env.js
-        echo "Contenido de latestTag.txt:"
-        cat src/latestTag.txt
-      displayName: 'Crear archivos de versión'
-
-    # PASO 3: Modificar el archivo index.html para incluir env.js
-    - script: |
-        echo "Modificando index.html para incluir env.js..."
+        # 3. Crear archivo env.js
+        cat > public/env.js << EOL
+// Archivo generado por el pipeline
+window.APP_VERSION = "$(deployTag)";
+console.log("Versión cargada desde env.js:", window.APP_VERSION);
+EOL
         
-        if [ -f "public/index.html" ]; then
-            # Crear una copia de respaldo
-            cp public/index.html public/index.html.bak
-            
-            # Verificar si ya contiene la referencia a env.js
-            if grep -q "env.js" public/index.html; then
-                echo "public/index.html ya incluye env.js, no es necesario modificarlo."
-            else
-                # Insertar la referencia antes de </head>
-                sed -i 's#</head>#    <script src="%PUBLIC_URL%/env.js"></script>\n  </head>#' public/index.html
-                echo "public/index.html modificado para incluir env.js."
-            fi
-        else
-            echo "##[warning]El archivo public/index.html no existe. Creando uno nuevo."
-            mkdir -p public
-            cat > public/index.html << 'EOL'
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Portafolio de Rodrigo Montenegro - DevOps Engineer" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <script src="%PUBLIC_URL%/env.js"></script>
-    <title>Rodrigo Montenegro | DevOps Engineer</title>
-  </head>
-  <body>
-    <noscript>Necesitas habilitar JavaScript para ejecutar esta aplicación.</noscript>
-    <div id="root"></div>
-  </body>
-</html>
-EOL
-            echo "Nuevo index.html creado con referencia a env.js."
-        fi
-      displayName: 'Modificar index.html para incluir env.js'
+        # 4. Crear archivo .env
+        echo "REACT_APP_VERSION=$(deployTag)" > .env
+        
+        echo "Archivos de configuración creados."
+      displayName: 'Crear archivos de configuración'
 
-    # PASO 4: Crear archivo netlify.toml para evitar build en Netlify
+    # Modificar App.js para importar AppVersion si es necesario
     - script: |
-        echo "Creando archivo netlify.toml..."
-        cat > netlify.toml << 'EOL'
-[build]
-  publish = "build"
-  command = "echo 'Sitio pre-construido en Azure DevOps - Omitiendo build en Netlify'"
+        echo "Verificando App.js..."
+        
+        if [ -f "src/App.js" ]; then
+          # Verificar si ya importa AppVersion
+          if ! grep -q "import './AppVersion'" src/App.js; then
+            echo "Modificando App.js para importar AppVersion..."
+            
+            # Crear copia de respaldo
+            cp src/App.js src/App.js.bak
+            
+            # Buscar la primera línea de importación para agregar después de ella
+            FIRST_IMPORT_LINE=$(grep -n "import " src/App.js | head -1 | cut -d: -f1)
+            
+            if [ -n "$FIRST_IMPORT_LINE" ]; then
+              # Insertar después de la última línea de importación
+              LAST_IMPORT_LINE=$(grep -n "import " src/App.js | tail -1 | cut -d: -f1)
+              
+              # Crear archivo temporal
+              head -n $LAST_IMPORT_LINE src/App.js > src/App.js.tmp
+              echo "import './AppVersion'; // Define APP_VERSION globalmente" >> src/App.js.tmp
+              tail -n +$((LAST_IMPORT_LINE+1)) src/App.js >> src/App.js.tmp
+              
+              # Reemplazar el original
+              mv src/App.js.tmp src/App.js
+              
+              echo "App.js modificado para importar AppVersion."
+            else
+              echo "No se pudo encontrar líneas de importación en App.js."
+            fi
+          else
+            echo "App.js ya importa AppVersion."
+          fi
+        else
+          echo "##[warning]src/App.js no existe."
+        fi
+      displayName: 'Modificar App.js si es necesario'
+      continueOnError: true
 
-[build.environment]
-  NODE_VERSION = "18"
-  NPM_VERSION = "9"
-EOL
-        echo "Archivo netlify.toml creado:"
-        cat netlify.toml
-      displayName: 'Crear archivo netlify.toml'
-
-    # PASO 5: Instalar dependencias y construir
+    # Instalar dependencias
     - script: |
         npm install
       displayName: 'npm install'
       
+    # Construir la aplicación
     - script: |
         echo "Construyendo la aplicación con la versión $(deployTag)..."
         REACT_APP_VERSION="$(deployTag)" npm run build
@@ -207,22 +182,23 @@ EOL
         REACT_APP_EMAILJS_SERVICE_ID: $(REACT_APP_EMAILJS_SERVICE_ID)
         REACT_APP_EMAILJS_TEMPLATE_ID: $(REACT_APP_EMAILJS_TEMPLATE_ID)
 
-    # PASO 6: Confirmar que netlify.toml esté en el directorio de build
+    # Confirmar que env.js está en build con el contenido correcto
     - script: |
-        echo "Copiando netlify.toml al directorio de build..."
-        cp netlify.toml build/
+        echo "Asegurando que env.js está en la carpeta build..."
         
-        # También copiar env.js para estar seguros
-        echo "Confirmando que env.js está en el directorio de build..."
-        if [ ! -f "build/env.js" ]; then
-            cp public/env.js build/
-        fi
+        # Confirmar que env.js está en build y tiene el contenido correcto
+        cat > build/env.js << EOL
+// Archivo generado por el pipeline
+window.APP_VERSION = "$(deployTag)";
+console.log("Versión cargada desde env.js:", window.APP_VERSION);
+EOL
         
-        echo "Contenido del directorio de build:"
+        echo "env.js copiado a la carpeta build."
+        echo "Contenido de la carpeta build:"
         ls -la build/
-      displayName: 'Confirmar archivos en directorio de build'
+      displayName: 'Copiar env.js a build'
 
-    # PASO 7: Archivar build
+    # Archivar build
     - task: ArchiveFiles@2
       inputs:
         rootFolderOrFile: '$(System.DefaultWorkingDirectory)/$(buildDir)'
@@ -232,7 +208,7 @@ EOL
         replaceExistingArchive: true
       displayName: 'Archive React build folder'
 
-    # PASO 8: Publicar artefacto
+    # Publicar artefacto
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/build.zip'
@@ -240,7 +216,7 @@ EOL
         publishLocation: 'Container'
       displayName: 'Publish build artifact'
 
-    # PASO 9: Desplegar a Netlify
+    # Desplegar a Netlify
     - script: |
         # Añadir información del tag al título del despliegue
         DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"

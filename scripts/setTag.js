@@ -2,55 +2,55 @@
 const fs = require('fs');
 const path = require('path');
 
-// Obtener la versión de la variable de entorno
+// Obtener la versión de la variable de entorno o package.json
 let appVersion = process.env.REACT_APP_VERSION;
 
-// Si no existe, intentar obtenerla del archivo .env
 if (!appVersion) {
   try {
-    const envFilePath = path.resolve(process.cwd(), '.env');
-    if (fs.existsSync(envFilePath)) {
-      const envContent = fs.readFileSync(envFilePath, 'utf8');
-      const versionMatch = envContent.match(/REACT_APP_VERSION=(.+)/);
-      if (versionMatch && versionMatch[1]) {
-        appVersion = versionMatch[1];
-      }
-    }
-  } catch (error) {
-    console.warn('Error al leer archivo .env:', error);
-  }
-}
-
-// Si todavía no existe, intentar obtener desde package.json
-if (!appVersion) {
-  try {
-    const packageJsonPath = path.resolve(process.cwd(), 'package.json');
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    appVersion = packageJson.version || 'v0.0.0';
+    // Usar la versión del package.json como respaldo
+    const packageJson = require('../package.json');
+    appVersion = packageJson.version || '0.1.0';
   } catch (error) {
     console.warn('Error al leer package.json:', error);
-    appVersion = 'v0.0.0';
+    appVersion = '0.1.0';
   }
 }
 
-console.log(`Configurando versión de aplicación: ${appVersion}`);
+console.log('Configurando versión de aplicación:', appVersion);
 
-// Crear archivo env.js en la carpeta public
-const envJsPath = path.resolve(process.cwd(), 'public', 'env.js');
-const envJsContent = `// Archivo generado automáticamente por setTag.js
+// Crear archivo latestTag.txt
+const tagFilePath = path.join(__dirname, '../src/latestTag.txt');
+fs.writeFileSync(tagFilePath, appVersion);
+console.log('Archivo latestTag.txt creado en:', tagFilePath);
+
+// También crear un archivo env.js para cargar la versión en runtime
+const envJsPath = path.join(__dirname, '../public/env.js');
+const envJsContent = `// Archivo generado por setTag.js
 window.APP_VERSION = "${appVersion}";
-console.log("Versión de aplicación cargada:", window.APP_VERSION);
+console.log("Versión cargada:", window.APP_VERSION);
 `;
 
-// Escribir el archivo
 fs.writeFileSync(envJsPath, envJsContent);
-console.log(`Archivo env.js creado en: ${envJsPath}`);
+console.log('Archivo env.js creado en:', envJsPath);
 
-// También crear un archivo latestTag.txt para tener la versión disponible de otra manera
-try {
-  const tagPath = path.resolve(process.cwd(), 'src', 'latestTag.txt');
-  fs.writeFileSync(tagPath, appVersion);
-  console.log(`Archivo latestTag.txt creado en: ${tagPath}`);
-} catch (error) {
-  console.error('Error al crear archivo latestTag.txt:', error);
+// Crear AppVersion.js si no existe
+const appVersionPath = path.join(__dirname, '../src/AppVersion.js');
+if (!fs.existsSync(appVersionPath)) {
+  const appVersionContent = `// AppVersion.js - Define la versión de la aplicación
+import latestTag from './latestTag.txt';
+
+// Define APP_VERSION globalmente para que esté disponible en todo el código
+window.APP_VERSION = latestTag || process.env.REACT_APP_VERSION || 'Desarrollo';
+
+// Para compatibilidad con el código existente, también lo definimos como una variable
+// eslint-disable-next-line
+var APP_VERSION = window.APP_VERSION;
+
+console.log('Versión de la aplicación:', APP_VERSION);
+
+export default APP_VERSION;
+`;
+
+  fs.writeFileSync(appVersionPath, appVersionContent);
+  console.log('Archivo AppVersion.js creado en:', appVersionPath);
 }

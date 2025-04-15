@@ -11,56 +11,74 @@ trigger:
 pr:
 - main
 
-# Parámetro único obligatorio para especificar el tag
-parameters:
-  - name: deployTag
-    displayName: 'Tag a desplegar'
-    type: string
-    default: ''
-    #required: true  # Hace que el parámetro sea obligatorio
-
 pool:
   name: Default
 
 variables:
   buildDir: 'build'
+  tagToUse: ''
 
 stages:
 - stage: Build_And_Deploy
   jobs:
-  - job: BuildAndDeploy
+  - job: GetLatestTag
+    displayName: 'Obtener último tag'
     steps:
     - checkout: self
       fetchDepth: 0  # Obtiene todo el historial y tags
-      clean: true    # Asegura un checkout limpio
       
     - script: |
-        # Verificar que el tag existe
-        echo "Listando todos los tags disponibles en el repositorio:"
-        git tag -l
+        # Obtener el último tag ordenado por fecha
+        LATEST_TAG=$(git tag --sort=-committerdate | head -n 1)
+        
+        if [ -z "$LATEST_TAG" ]; then
+          echo "##vso[task.logissue type=error]No se encontraron tags en el repositorio."
+          exit 1
+        fi
+        
+        echo "Último tag disponible: $LATEST_TAG"
+        
+        # Establecer variable para el siguiente job
+        echo "##vso[task.setvariable variable=tagToUse;isOutput=true]$LATEST_TAG"
+      displayName: 'Obtener último tag disponible'
+      name: tagSelection
 
-        echo "Verificando si existe el tag: ${{ parameters.deployTag }}"
-        if ! git rev-parse "${{ parameters.deployTag }}" >/dev/null 2>&1; then
-          echo "##[error]El tag ${{ parameters.deployTag }} no existe en el repositorio."
+  - job: BuildAndDeploy
+    dependsOn: GetLatestTag
+    variables:
+      deployTag: $[ dependencies.GetLatestTag.outputs['tagSelection.tagToUse'] ]
+    steps:
+    - checkout: self
+      fetchDepth: 0
+      clean: true
+      
+    - script: |
+        # Verificar el tag que vamos a usar
+        echo "Tag seleccionado para despliegue: $(deployTag)"
+        
+        # Verificar que el tag existe
+        if ! git rev-parse "$(deployTag)" >/dev/null 2>&1; then
+          echo "##vso[task.logissue type=error]El tag $(deployTag) no existe en el repositorio."
           echo "##[error]Tags disponibles:"
           git tag -l
           exit 1
         fi
-
-        # Hacer checkout al tag especificado
-        echo "Preparando despliegue del tag: ${{ parameters.deployTag }}"
-        git checkout ${{ parameters.deployTag }}
-
+        
+        # Hacer checkout al tag seleccionado
+        echo "Preparando despliegue del tag: $(deployTag)"
+        git checkout $(deployTag)
+        
         # Verificar que estamos en el tag correcto
         CURRENT_COMMIT=$(git rev-parse HEAD)
-        TAG_COMMIT=$(git rev-parse ${{ parameters.deployTag }})
-
+        TAG_COMMIT=$(git rev-parse $(deployTag))
+        
         if [ "$CURRENT_COMMIT" != "$TAG_COMMIT" ]; then
-          echo "##[error]No se pudo hacer checkout al tag ${{ parameters.deployTag }}."
+          echo "##[error]No se pudo hacer checkout al tag $(deployTag)."
           exit 1
         fi
-
-        echo "Checkout exitoso al tag ${{ parameters.deployTag }} (commit: $CURRENT_COMMIT)"
+        
+        echo "Checkout exitoso al tag $(deployTag) (commit: $CURRENT_COMMIT)"
+      displayName: 'Checkout al tag seleccionado'
       
     - task: NodeTool@0
       inputs:
@@ -69,14 +87,27 @@ stages:
 
     # Crear un archivo .env para exponer el tag a la aplicación React
     - script: |
-        echo "REACT_APP_TAG=${{ parameters.deployTag }}" > .env
+        echo "REACT_APP_TAG=$(deployTag)" > .env
         cat .env
       displayName: 'Create .env file with tag info'
 
+    # Instalar dependencias y construir la aplicación
     - script: |
         npm install
         npm run build
       displayName: 'npm install and build'
+      env:
+        REACT_APP_TAG: $(deployTag)
+
+    # Verificar la presencia del archivo de versión
+    - script: |
+        if [ -f "src/version.js" ]; then
+          echo "Archivo de versión creado correctamente:"
+          cat src/version.js
+        else
+          echo "##vso[task.logissue type=warning]El archivo de versión no se creó. Verificar el script setTag.js."
+        fi
+      displayName: 'Verificar archivo de versión'
 
     # Archivar build
     - task: ArchiveFiles@2
@@ -96,10 +127,10 @@ stages:
         publishLocation: 'Container'
       displayName: 'Publish build artifact'
 
-    # Desplegar directamente a Netlify desde el ZIP
+    # Desplegar a Netlify
     - script: |
         # Añadir información del tag al título del despliegue
-        DEPLOY_TITLE="Deploy ${{ parameters.deployTag }} from Azure DevOps"
+        DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
         
         echo "Desplegando a Netlify: $DEPLOY_TITLE"
         
@@ -115,6 +146,9 @@ stages:
         DEPLOY_URL=$(echo $DEPLOY_OUTPUT | grep -o '"deploy_url":"[^"]*"' | cut -d'"' -f4)
         if [ ! -z "$DEPLOY_URL" ]; then
           echo "Despliegue disponible en: $DEPLOY_URL"
+          echo "##vso[task.complete result=Succeeded;]Despliegue completado exitosamente."
+        else
+          echo "##vso[task.logissue type=warning]No se pudo obtener la URL de despliegue."
         fi
       displayName: 'Deploy to Netlify'
       env:

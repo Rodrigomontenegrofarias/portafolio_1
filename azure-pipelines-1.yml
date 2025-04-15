@@ -3,9 +3,10 @@ trigger:
   branches:
     include:
       - main  # Excluye todas las ramas
-  tags:
-    include:
-      - V*
+#  tags:
+
+#    include:
+#      - V*
 
 # Trigger para Pull Requests hacia main
 pr:

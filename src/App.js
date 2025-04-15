@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
+import latestTag from './latestTag.txt'; // Just import the file
 // Importamos la versión si existe
-let APP_VERSION = process.env.REACT_APP_TAG || 'Desarrollo';
+//let APP_VERSION = process.env.REACT_APP_TAG || 'Desarrollo';
 
 // Intentamos cargar la versión desde un archivo generado por el script de build
 try {
@@ -280,9 +281,10 @@ function Home() {
       </div>
       
       {/* Mostrar el tag de versión si está disponible */}
-      <div className="version-tag">
-        <p>Versión: {APP_VERSION}</p>
-      </div>
+      
+        <div className="version-tag">
+          <p>Versión: {latestTag}</p>
+        </div>
     </section>
   );
 }

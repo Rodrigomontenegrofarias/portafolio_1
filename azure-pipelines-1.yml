@@ -17,7 +17,7 @@ parameters:
     displayName: 'Tag a desplegar'
     type: string
     default: ''
-    required: true  # Hace que el parámetro sea obligatorio
+    #required: true  # Hace que el parámetro sea obligatorio
 
 pool:
   name: Default

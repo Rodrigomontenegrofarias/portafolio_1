@@ -1,8 +1,8 @@
-# Trigger automático para cambios en main
+# Trigger automático solo para tags
 trigger:
   branches:
-    include:
-      - main
+    exclude:
+      - '*'  # Excluye todas las ramas
   tags:
     include:
       - V*
@@ -11,19 +11,10 @@ trigger:
 pr:
 - main
 
-# Parámetros para seleccionar el tag a desplegar
+# Parámetro único obligatorio para especificar el tag
 parameters:
-  - name: deployMode
-    displayName: 'Modo de despliegue'
-    type: string
-    default: 'latest'
-    values:
-      - latest
-      - specific
-      - previous
-  
-  - name: specificTag
-    displayName: 'Tag específico (solo si el modo es "specific")'
+  - name: deployTag
+    displayName: 'Tag a desplegar'
     type: string
     default: ''
 
@@ -32,75 +23,25 @@ pool:
 
 variables:
   buildDir: 'build'
-  tagToUse: ''
 
 stages:
 - stage: Build_And_Deploy
   jobs:
-  - job: SelectTag
-    displayName: 'Seleccionar tag para despliegue'
+  - job: BuildAndDeploy
     steps:
     - checkout: self
       fetchDepth: 0  # Obtiene todo el historial y tags
       
     - script: |
-        # Obtener la lista de tags ordenados por fecha (más reciente primero)
-        ALL_TAGS=$(git tag --sort=-committerdate)
-        
-        # Establecer el tag que se va a usar según el modo seleccionado
-        if [ "${{ parameters.deployMode }}" == "latest" ]; then
-          # Usar el último tag
-          DEPLOY_TAG=$(echo "$ALL_TAGS" | head -n 1)
-          if [ -z "$DEPLOY_TAG" ]; then
-            echo "No se encontraron tags. Usando la versión actual de main."
-            DEPLOY_TAG="main"
-          else
-            echo "Usando último tag: $DEPLOY_TAG"
-          fi
-        
-        elif [ "${{ parameters.deployMode }}" == "specific" ]; then
-          # Usar el tag específico indicado
-          DEPLOY_TAG="${{ parameters.specificTag }}"
-          if [ -z "$DEPLOY_TAG" ]; then
-            echo "##vso[task.logissue type=error]No se especificó un tag específico."
-            exit 1
-          fi
-          echo "Usando tag específico: $DEPLOY_TAG"
-        
-        elif [ "${{ parameters.deployMode }}" == "previous" ]; then
-          # Usar la versión anterior al último tag
-          DEPLOY_TAG=$(echo "$ALL_TAGS" | head -n 2 | tail -n 1)
-          if [ -z "$DEPLOY_TAG" ]; then
-            echo "##vso[task.logissue type=error]No hay un tag anterior disponible."
-            exit 1
-          fi
-          echo "Usando tag anterior: $DEPLOY_TAG"
-        fi
-        
-        # Verificar que el tag existe si no es main
-        if [ "$DEPLOY_TAG" != "main" ] && ! git rev-parse "$DEPLOY_TAG" >/dev/null 2>&1; then
-          echo "##vso[task.logissue type=error]El tag $DEPLOY_TAG no existe."
+        # Verificar que el tag existe
+        if ! git rev-parse "${{ parameters.deployTag }}" >/dev/null 2>&1; then
+          echo "##vso[task.logissue type=error]El tag ${{ parameters.deployTag }} no existe en el repositorio."
           exit 1
         fi
         
-        # Establecer la variable para usarla en los siguientes pasos
-        echo "##vso[task.setvariable variable=tagToUse;isOutput=true]$DEPLOY_TAG"
-      displayName: 'Determinar tag a desplegar'
-      name: tagSelection
-
-  - job: BuildAndDeploy
-    dependsOn: SelectTag
-    variables:
-      deployTag: $[ dependencies.SelectTag.outputs['tagSelection.tagToUse'] ]
-    steps:
-    - checkout: self
-      fetchDepth: 0
-      
-    - script: |
-        echo "Preparando despliegue de versión: $(deployTag)"
-        if [ "$(deployTag)" != "main" ]; then
-          git checkout $(deployTag)
-        fi
+        # Hacer checkout al tag especificado
+        echo "Preparando despliegue del tag: ${{ parameters.deployTag }}"
+        git checkout ${{ parameters.deployTag }}
       displayName: 'Checkout al tag seleccionado'
       
     - task: NodeTool@0
@@ -109,20 +50,14 @@ stages:
       displayName: 'Install Node.js'
 
     - script: |
-        echo "REACT_APP_EMAILJS_SERVICE_ID=service_199ivdm" > .env
-        echo "REACT_APP_EMAILJS_TEMPLATE_ID=template_8kjbi9b" >> .env
-        echo "REACT_APP_EMAILJS_PUBLIC_KEY=OMXAbEih8zZ-MsYY5" >> .env
-        echo "REACT_APP_TAG=$(deployTag)" >> .env
-
-        echo "Contenido del .env generado:"
-        cat .env
-
         npm install
+        export REACT_APP_TAG="${{ parameters.deployTag }}"
         npm run build
       displayName: 'npm install and build'
+      env:
+        REACT_APP_TAG: ${{ parameters.deployTag }}
 
-
-    # ✅ Archivar build
+    # Archivar build
     - task: ArchiveFiles@2
       inputs:
         rootFolderOrFile: '$(System.DefaultWorkingDirectory)/$(buildDir)'
@@ -132,7 +67,7 @@ stages:
         replaceExistingArchive: true
       displayName: 'Archive React build folder'
 
-    # ✅ Publicar artefacto
+    # Publicar artefacto
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/build.zip'
@@ -140,10 +75,10 @@ stages:
         publishLocation: 'Container'
       displayName: 'Publish build artifact'
 
-    # ✅ Desplegar a Netlify
+    # Desplegar a Netlify
     - script: |
         # Añadir información del tag al título del despliegue
-        DEPLOY_TITLE="Deploy $(DEPLOY_TAG) from Azure DevOps"
+        DEPLOY_TITLE="Deploy ${{ parameters.deployTag }} from Azure DevOps"
         
         curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
         -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \

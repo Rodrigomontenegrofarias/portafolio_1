@@ -1,4 +1,3 @@
-// Libreria 1
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
@@ -291,7 +290,6 @@ function Home() {
     </section>
   );
 }
-
 
 // Componente sobre mí
 function About() {

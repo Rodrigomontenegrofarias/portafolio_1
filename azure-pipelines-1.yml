@@ -1,4 +1,4 @@
-# Trigger automático para cambios en main
+# Trigge r automático para cambios en main
 trigger:
   branches:
     include:

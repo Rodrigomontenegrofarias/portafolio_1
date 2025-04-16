@@ -1,64 +1,115 @@
-# Trigge r automático para cambios en main 
+# azure-pipelines.yml
 trigger:
-  branches:
-    include:
-      - main
-  #tags:
-  #  include:
-  #    - v*
+  - main  # O la rama que prefieras
 
-# Trigger para Pull Requests hacia main
-pr:
-- main
-
-# Parámetros para seleccionar el tag a desplegar
 pool:
-  name: Default
+  vmImage: 'ubuntu-latest'
 
 variables:
-  buildDir: 'build'
+  # Variables del sistema
+  system.debug: false
+  # Variables del proyecto
+  deployTag: $(Build.BuildNumber)
+  # Asegúrate de configurar estas variables en la configuración del pipeline
+  # NETLIFY_AUTH_TOKEN: Tu token de autenticación de Netlify
+  # NETLIFY_SITE_ID: El ID de tu sitio en Netlify
 
-steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: '18.x'
-      displayName: 'Install Node.js'
+stages:
+  - stage: Build
+    displayName: 'Build and Package'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Job'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '16.x'
+            displayName: 'Install Node.js'
 
-    - script: |
-        npm run clean
-        npm install
-        npm run build
-      displayName: 'npm install and build'
+          - script: |
+              npm ci
+            displayName: 'Install dependencies'
 
-    # ✅ Archivar build
-    - task: ArchiveFiles@2
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/$(buildDir)'
-        includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/build.zip'
-        replaceExistingArchive: true
-      displayName: 'Archive React build folder'
+          - script: |
+              npm run build
+            displayName: 'Build project'
 
-    # ✅ Publicar artefacto
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/build.zip'
-        ArtifactName: 'drop'
-        publishLocation: 'Container'
-      displayName: 'Publish build artifact'
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'  # Ajusta esta ruta según la ubicación de tu carpeta de build
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/build.zip'
+              replaceExistingArchive: true
+            displayName: 'Archive build files'
 
-    # ✅ Desplegar a Netlify
-    - script: |
-        # Añadir información del tag al título del despliegue
-        DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
-        
-        curl -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
-        -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
-        -F "file=@$(Build.ArtifactStagingDirectory)/build.zip" \
-        -F "clear_cache=true" \
-        -F "title=$DEPLOY_TITLE"
-      displayName: 'Deploy to Netlify'
-      env:
-        NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)
-        NETLIFY_SITE_ID: $(NETLIFY_SITE_ID)
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: 'drop'
+            displayName: 'Publish artifacts'
+
+  - stage: Deploy
+    displayName: 'Deploy to Netlify'
+    dependsOn: Build
+    jobs:
+      - job: DeployJob
+        displayName: 'Deploy Job'
+        steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+            displayName: 'Download build artifacts'
+
+          - script: |
+              # Ejecutar el despliegue inicial
+              DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
+              
+              echo "Iniciando despliegue a Netlify..."
+              
+              DEPLOY_RESPONSE=$(curl -s -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
+              -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
+              -F "file=@$(System.ArtifactsDirectory)/drop/build.zip" \
+              -F "title=$DEPLOY_TITLE")
+              
+              echo "Respuesta de despliegue: $DEPLOY_RESPONSE"
+              
+              # Extraer ID del despliegue de la respuesta
+              DEPLOY_ID=$(echo $DEPLOY_RESPONSE | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+              
+              if [ -z "$DEPLOY_ID" ]; then
+                echo "Error: No se pudo obtener el ID del despliegue. Comprobando último despliegue..."
+                # Alternativa: Obtener el ID del último despliegue
+                DEPLOY_ID=$(curl -s -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
+                https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys?per_page=1 | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+              fi
+              
+              echo "ID del despliegue: $DEPLOY_ID"
+              
+              # Esperar a que el despliegue se procese
+              echo "Esperando que el despliegue inicial se complete..."
+              sleep 30
+              
+              # Ejecutar "Clear cache and retry with latest branch commit"
+              echo "Ejecutando: Clear cache and retry with latest branch commit"
+              
+              RETRY_RESPONSE=$(curl -s -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys/$DEPLOY_ID/retry \
+              -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
+              -H "Content-Type: application/json" \
+              -d '{"clear_cache":true}')
+              
+              echo "Respuesta de retry: $RETRY_RESPONSE"
+              
+              # Verificar si el retry fue exitoso
+              if echo $RETRY_RESPONSE | grep -q '"state":"enqueued"'; then
+                echo "Limpieza de caché y redespliegue con último commit iniciado exitosamente"
+              else
+                echo "Advertencia: La respuesta del retry no indica estado 'enqueued'. Verificar en el dashboard de Netlify."
+              fi
+            displayName: 'Deploy to Netlify with cache clearing and retry'
+            env:
+              NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)
+              NETLIFY_SITE_ID: $(NETLIFY_SITE_ID)

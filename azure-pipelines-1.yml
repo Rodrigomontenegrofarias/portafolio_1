@@ -13,8 +13,6 @@ variables:
   # Asegúrate de configurar estas variables en la configuración del pipeline
   # NETLIFY_AUTH_TOKEN: Tu token de autenticación de Netlify
   # NETLIFY_SITE_ID: El ID de tu sitio en Netlify
-  # Variable group con las variables de EmailJS
-- group: 'variable'
 
 stages:
   - stage: Build
@@ -36,9 +34,9 @@ stages:
               npm run build
             displayName: 'Build project'
             env:
-              REACT_APP_EMAILJS_SERVICE_ID: $(REACT_APP_EMAILJS_SERVICE_ID)
-              REACT_APP_EMAILJS_TEMPLATE_ID: $(REACT_APP_EMAILJS_TEMPLATE_ID)
-              REACT_APP_EMAILJS_PUBLIC_KEY: $(REACT_APP_EMAILJS_PUBLIC_KEY)
+                REACT_APP_EMAILJS_SERVICE_ID: $(REACT_APP_EMAILJS_SERVICE_ID)
+                REACT_APP_EMAILJS_TEMPLATE_ID: $(REACT_APP_EMAILJS_TEMPLATE_ID)
+                REACT_APP_EMAILJS_PUBLIC_KEY: $(REACT_APP_EMAILJS_PUBLIC_KEY)
 
           - task: ArchiveFiles@2
             inputs:
@@ -119,3 +117,4 @@ stages:
             env:
               NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)
               NETLIFY_SITE_ID: $(NETLIFY_SITE_ID)
+              

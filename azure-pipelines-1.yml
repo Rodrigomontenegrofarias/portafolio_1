@@ -13,6 +13,9 @@ variables:
   # Asegúrate de configurar estas variables en la configuración del pipeline
   # NETLIFY_AUTH_TOKEN: Tu token de autenticación de Netlify
   # NETLIFY_SITE_ID: El ID de tu sitio en Netlify
+  REACT_APP_EMAILJS_SERVICE_ID: $(REACT_APP_EMAILJS_SERVICE_ID)
+  REACT_APP_EMAILJS_TEMPLATE_ID: $(REACT_APP_EMAILJS_TEMPLATE_ID)
+  REACT_APP_EMAILJS_PUBLIC_KEY: $(REACT_APP_EMAILJS_PUBLIC_KEY)
 
 stages:
   - stage: Build

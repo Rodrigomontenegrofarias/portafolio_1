@@ -10,11 +10,11 @@ variables:
   system.debug: false
   # Variables del proyecto
   deployTag: $(Build.BuildNumber)
-  # Variable group con las variables de EmailJS
-  - group: 'EmailJS-Variables'
   # Asegúrate de configurar estas variables en la configuración del pipeline
   # NETLIFY_AUTH_TOKEN: Tu token de autenticación de Netlify
   # NETLIFY_SITE_ID: El ID de tu sitio en Netlify
+  # Variable group con las variables de EmailJS
+- group: 'EmailJS-Variables'
 
 stages:
   - stage: Build

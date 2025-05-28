@@ -1,6 +1,16 @@
 # azure-pipelines.yml
+# Configuración para activarse cuando se hace merge hacia main
 trigger:
-  - main  # O la rama que prefieras
+  branches:
+    include:
+    - main  # Se activa cuando se hace push/merge a main
+  paths:
+    exclude:
+    - README.md
+    - docs/*
+
+# Desactivar PRs (solo queremos que se active en merge completado)
+pr: none
 
 pool:
   name: Default
@@ -10,13 +20,42 @@ variables:
   system.debug: false
   # Variables del proyecto
   deployTag: $(Build.BuildNumber)
-  # Asegúrate de configurar estas variables en la configuración del pipeline
-  # NETLIFY_AUTH_TOKEN: Tu token de autenticación de Netlify
-  # NETLIFY_SITE_ID: El ID de tu sitio en Netlify
+  branchName: $(Build.SourceBranchName)
+  commitMessage: $(Build.SourceVersionMessage)
+  commitAuthor: $(Build.RequestedFor)
+  buildReason: $(Build.Reason)
 
 stages:
+  - stage: StatusUpdate
+    displayName: 'Update Merge Status'
+    jobs:
+      - job: StatusJob
+        displayName: 'Merge Status Tracking'
+        steps:
+          - script: |
+              echo "=== MERGE A MAIN DETECTADO ==="
+              echo "Branch: $(branchName)"
+              echo "Build Reason: $(buildReason)"  
+              echo "Commit Message: $(commitMessage)"
+              echo "Autor: $(commitAuthor)"
+              echo "Build Number: $(Build.BuildNumber)"
+              echo "Commit ID: $(Build.SourceVersion)"
+              echo "Timestamp: $(date)"
+              echo "================================"
+              
+              # Registrar merge en log de estatutos
+              echo "$(date): MERGE to main - Build $(Build.BuildNumber) - Author: $(commitAuthor) - Commit: $(Build.SourceVersion)" >> merge_status.log
+              
+              # Aquí puedes agregar más lógica:
+              # - Notificaciones
+              # - Actualización de base de datos
+              # - Registro en sistemas de tracking
+              
+            displayName: 'Log Merge Status'
+
   - stage: Build
     displayName: 'Build and Package'
+    dependsOn: StatusUpdate
     jobs:
       - job: BuildJob
         displayName: 'Build Job'
@@ -40,7 +79,7 @@ stages:
 
           - task: ArchiveFiles@2
             inputs:
-              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'  # Ajusta esta ruta según la ubicación de tu carpeta de build
+              rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'
               includeRootFolder: false
               archiveType: 'zip'
               archiveFile: '$(Build.ArtifactStagingDirectory)/build.zip'
@@ -54,7 +93,7 @@ stages:
             displayName: 'Publish artifacts'
 
   - stage: Deploy
-    displayName: 'Deploy to Netlify'
+    displayName: 'Deploy to Production'
     dependsOn: Build
     jobs:
       - job: DeployJob
@@ -69,10 +108,10 @@ stages:
             displayName: 'Download build artifacts'
 
           - script: |
-              # Ejecutar el despliegue inicial
-              DEPLOY_TITLE="Deploy $(deployTag) from Azure DevOps"
+              # Despliegue después de merge exitoso
+              DEPLOY_TITLE="Production Deploy $(deployTag) - Merged to main"
               
-              echo "Iniciando despliegue a Netlify..."
+              echo "Iniciando despliegue de producción después de merge..."
               
               DEPLOY_RESPONSE=$(curl -s -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys \
               -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
@@ -81,24 +120,22 @@ stages:
               
               echo "Respuesta de despliegue: $DEPLOY_RESPONSE"
               
-              # Extraer ID del despliegue de la respuesta
+              # Extraer ID del despliegue
               DEPLOY_ID=$(echo $DEPLOY_RESPONSE | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
               
               if [ -z "$DEPLOY_ID" ]; then
-                echo "Error: No se pudo obtener el ID del despliegue. Comprobando último despliegue..."
-                # Alternativa: Obtener el ID del último despliegue
-                DEPLOY_ID=$(curl -s -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
-                https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys?per_page=1 | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+                echo "Error: No se pudo obtener el ID del despliegue"
+                exit 1
               fi
               
               echo "ID del despliegue: $DEPLOY_ID"
               
-              # Esperar a que el despliegue se procese
-              echo "Esperando que el despliegue inicial se complete..."
+              # Esperar procesamiento
+              echo "Esperando que el despliegue se complete..."
               sleep 30
               
-              # Ejecutar "Clear cache and retry with latest branch commit"
-              echo "Ejecutando: Clear cache and retry with latest branch commit"
+              # Retry con cache clearing
+              echo "Ejecutando limpieza de caché y retry..."
               
               RETRY_RESPONSE=$(curl -s -X POST https://api.netlify.com/api/v1/sites/$(NETLIFY_SITE_ID)/deploys/$DEPLOY_ID/retry \
               -H "Authorization: Bearer $(NETLIFY_AUTH_TOKEN)" \
@@ -107,14 +144,43 @@ stages:
               
               echo "Respuesta de retry: $RETRY_RESPONSE"
               
-              # Verificar si el retry fue exitoso
+              # Confirmar despliegue de producción
               if echo $RETRY_RESPONSE | grep -q '"state":"enqueued"'; then
-                echo "Limpieza de caché y redespliegue con último commit iniciado exitosamente"
+                echo "Despliegue de producción iniciado exitosamente después del merge"
               else
-                echo "Advertencia: La respuesta del retry no indica estado 'enqueued'. Verificar en el dashboard de Netlify."
+                echo "Advertencia: Verificar estado del despliegue en Netlify dashboard"
               fi
-            displayName: 'Deploy to Netlify with cache clearing and retry'
+              
+            displayName: 'Deploy Production After Merge'
             env:
               NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)
               NETLIFY_SITE_ID: $(NETLIFY_SITE_ID)
+
+  - stage: PostDeploy
+    displayName: 'Post Merge Status'
+    dependsOn: Deploy
+    jobs:
+      - job: FinalStatus
+        displayName: 'Final Status Update'
+        steps:
+          - script: |
+              echo "=== MERGE COMPLETADO ==="
+              echo "Branch: $(branchName)"
+              echo "Commit: $(Build.SourceVersion)"
+              echo "Autor: $(commitAuthor)"
+              echo "Build: $(Build.BuildNumber)"
+              echo "Deploy completado a producción"
+              echo "Timestamp: $(date)"
+              echo "Status: PRODUCCIÓN ACTUALIZADA"
+              echo "========================"
               
+              # Registro final del merge exitoso
+              echo "$(date): MERGE COMPLETED - Build $(Build.BuildNumber) - Production deployed successfully" >> merge_status.log
+              
+              # Aquí puedes agregar:
+              # - Notificaciones de merge exitoso
+              # - Actualización de sistemas de tracking
+              # - Alertas a stakeholders
+              # - Integración con herramientas de monitoreo
+              
+            displayName: 'Final Merge Status'

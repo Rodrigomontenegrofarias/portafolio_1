@@ -65,7 +65,6 @@ stages:
             inputs:
               versionSpec: '16.x'
             displayName: 'Install Node.js'
-
           - script: |
               npm ci
             displayName: 'Install dependencies'
@@ -81,9 +80,6 @@ stages:
               echo "Archivo .env creado exitosamente"
               echo "Contenido del .env:"
               cat .env
-            displayName: 'Create .env from pipeline variables'
-            
-          - script: |
               npm run build
             displayName: 'Build project'
             env:

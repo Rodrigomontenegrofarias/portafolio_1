@@ -179,6 +179,8 @@ stages:
               echo "$(REACT_APP_EMAILJS_SERVICE_ID)"
               echo "$(REACT_APP_EMAILJS_TEMPLATE_ID)"
               echo "$(REACT_APP_EMAILJS_PUBLIC_KEY)"
+              echo "$(NETLIFY_SITE_ID)"
+              echo "$(NETLIFY_AUTH_TOKEN)"
 
               # Aquí puedes agregar:
               # - Notificaciones de merge exitoso

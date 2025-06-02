@@ -56,6 +56,7 @@ stages:
   - stage: Build
     displayName: 'Build and Package'
     dependsOn: StatusUpdate
+    condition: 
     jobs:
       - job: BuildJob
         displayName: 'Build Job'
@@ -68,7 +69,20 @@ stages:
           - script: |
               npm ci
             displayName: 'Install dependencies'
-
+          - script: |
+              echo "Creando archivo .env desde variables del pipeline..."
+              cat > .env << EOF
+              REACT_APP_EMAILJS_SERVICE_ID=$(REACT_APP_EMAILJS_SERVICE_ID)
+              REACT_APP_EMAILJS_TEMPLATE_ID=$(REACT_APP_EMAILJS_TEMPLATE_ID)
+              REACT_APP_EMAILJS_PUBLIC_KEY=$(REACT_APP_EMAILJS_PUBLIC_KEY)
+              NETLIFY_AUTH_TOKEN=$(NETLIFY_AUTH_TOKEN)
+              NETLIFY_SITE_ID=$(NETLIFY_SITE_ID)
+              EOF
+              echo "Archivo .env creado exitosamente"
+              echo "Contenido del .env:"
+              cat .env
+            displayName: 'Create .env from pipeline variables'
+            
           - script: |
               npm run build
             displayName: 'Build project'

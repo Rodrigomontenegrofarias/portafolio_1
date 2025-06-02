@@ -177,6 +177,9 @@ stages:
               # Registro final del merge exitoso
               echo "$(date): MERGE COMPLETED - Build $(Build.BuildNumber) - Production deployed successfully" >> merge_status.log
               echo "$(REACT_APP_EMAILJS_SERVICE_ID)"
+              echo "$(REACT_APP_EMAILJS_TEMPLATE_ID)"
+              echo "$(REACT_APP_EMAILJS_PUBLIC_KEY)"
+
               # Aquí puedes agregar:
               # - Notificaciones de merge exitoso
               # - Actualización de sistemas de tracking

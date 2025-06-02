@@ -176,16 +176,16 @@ stages:
               
               # Registro final del merge exitoso
               echo "$(date): MERGE COMPLETED - Build $(Build.BuildNumber) - Production deployed successfully" >> merge_status.log
-              echo "$(REACT_APP_EMAILJS_SERVICE_ID)"
-              echo "$(REACT_APP_EMAILJS_TEMPLATE_ID)"
-              echo "$(REACT_APP_EMAILJS_PUBLIC_KEY)"
-              echo "$(NETLIFY_SITE_ID)"
-              echo "$(NETLIFY_AUTH_TOKEN)"
-
+              
               # Aquí puedes agregar:
               # - Notificaciones de merge exitoso
               # - Actualización de sistemas de tracking
               # - Alertas a stakeholders
               # - Integración con herramientas de monitoreo
+              echo "$(REACT_APP_EMAILJS_SERVICE_ID)"
+              echo "$(REACT_APP_EMAILJS_TEMPLATE_ID)"
+              echo "$(REACT_APP_EMAILJS_PUBLIC_KEY)"
+              echo "$(NETLIFY_SITE_ID)"
+              echo "$(NETLIFY_AUTH_TOKEN)"
               
             displayName: 'Final Merge Status'

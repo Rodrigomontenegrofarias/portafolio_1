@@ -836,13 +836,25 @@ header {
 .modal {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -851,27 +863,82 @@ header {
   max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
-  border-radius: 1.5rem;
-  box-shadow: var(--shadow-2xl);
-  border: 1px solid var(--border-light);
+  border-radius: 2rem;
+  box-shadow: var(--shadow-2xl), 0 0 60px rgba(59, 130, 246, 0.3);
+  border: 1px solid transparent;
+  backdrop-filter: var(--glass-blur) saturate(180%);
+  -webkit-backdrop-filter: var(--glass-blur) saturate(180%);
+  position: relative;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2rem;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent-pink));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0.8;
+  animation: borderGlow 3s ease-in-out infinite;
 }
 
 /* Project Detail in Modal */
 .project-detail-header {
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--border-light);
+  padding: 2rem 2.5rem;
+  border-bottom: 2px solid var(--border-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+}
+
+.project-detail-header h3 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.75rem;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  font-size: 2rem;
+  background: var(--bg-body);
+  border: 2px solid var(--border-light);
+  font-size: 1.5rem;
   color: var(--text-secondary);
   cursor: pointer;
   line-height: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.close-btn:hover {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border-color: transparent;
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .project-detail-content {
@@ -1292,9 +1359,10 @@ footer {
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background-color: var(--border-light);
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary), var(--secondary), var(--accent-cyan));
   transform: translateX(-50%);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 }
 
 @media (max-width: 768px) {
@@ -1316,11 +1384,39 @@ footer {
 .timeline-content {
   width: calc(50% - 30px);
   background-color: var(--bg-card);
-  padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-light);
-  transition: var(--transition-base);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid transparent;
+  transition: var(--transition-smooth);
+  backdrop-filter: var(--glass-blur) saturate(180%);
+  -webkit-backdrop-filter: var(--glass-blur) saturate(180%);
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 1.5rem;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.timeline-content:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--shadow-xl), 0 0 30px rgba(59, 130, 246, 0.2);
+}
+
+.timeline-content:hover::before {
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {
@@ -1334,14 +1430,27 @@ footer {
   position: absolute;
   left: 50%;
   top: 20px;
-  width: 16px;
-  height: 16px;
-  background-color: var(--primary);
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   border-radius: 50%;
   border: 4px solid var(--bg-body);
   transform: translateX(-50%);
   z-index: 10;
-  box-shadow: 0 0 0 2px var(--primary);
+  box-shadow: 0 0 0 3px var(--primary), 0 0 20px rgba(59, 130, 246, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--primary), 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px var(--primary), 0 0 30px rgba(139, 92, 246, 0.7);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1351,28 +1460,49 @@ footer {
 }
 
 .timeline-header {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .timeline-header h3 {
-  font-size: 1.1rem;
-  color: var(--primary);
-  margin-bottom: 0.25rem;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
 }
 
 .company-name {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   display: block;
+  font-size: 1.05rem;
+  margin-bottom: 0.25rem;
 }
 
 .period {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
   font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  display: inline-block;
+  margin-top: 0.25rem;
+}
+
+.timeline-content p {
+  line-height: 1.7;
+  margin-bottom: 1rem;
 }
 
 .resume-download {
   text-align: center;
-  margin-top: 3rem;
+  margin-top: 4rem;
+}
+
+.resume-download .btn {
+  box-shadow: var(--shadow-xl), 0 0 30px rgba(59, 130, 246, 0.3);
 }

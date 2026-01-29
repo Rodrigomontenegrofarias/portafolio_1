@@ -394,7 +394,7 @@ function About() {
 
             <div className="about-image-container">
               <div className="profile-image">
-                <img src="https://via.placeholder.com/300" alt="Rodrigo Montenegro" />
+                <img src="/imagenes/profile.png" alt="Rodrigo Montenegro" />
                 <div className="image-overlay">
                   <span className="name-badge">Rodrigo Montenegro</span>
                 </div>
@@ -470,7 +470,7 @@ function Projects() {
       id: 1,
       title: 'Infraestructura Cloud',
       description: 'Implementación de arquitectura escalable en AWS para una plataforma de comercio electrónico. Diseño e infraestructura utilizando contenedores Docker y orquestación con Kubernetes.',
-      image: 'https://via.placeholder.com/600x400?text=Infraestructura+Cloud',
+      image: '/imagenes/project_cloud.png',
       technologies: 'Docker, Kubernetes, AWS, Terraform, Jenkins',
       duration: '4 meses',
       role: 'DevOps Engineer',
@@ -482,7 +482,7 @@ function Projects() {
       id: 2,
       title: 'Sistema de Monitoreo',
       description: 'Desarrollo de una plataforma integrada de monitoreo para identificar y resolver problemas en tiempo real. Implementación de alertas proactivas y dashboards personalizados.',
-      image: 'https://via.placeholder.com/600x400?text=Sistema+de+Monitoreo',
+      image: '/imagenes/project_monitoring.png',
       technologies: 'Nagios, Prometheus, Grafana, Linux, Bash',
       duration: '3 meses',
       role: 'Especialista en Sistemas',
@@ -494,7 +494,7 @@ function Projects() {
       id: 3,
       title: 'Pipelines CI/CD',
       description: 'Implementación de pipelines automatizados para pruebas y despliegue continuo en múltiples entornos. Incluye aprobaciones configurables y rollbacks automáticos.',
-      image: 'https://via.placeholder.com/600x400?text=Pipelines+CI/CD',
+      image: '/imagenes/project_cicd.png',
       technologies: 'Jenkins, Azure DevOps, Docker, Git, SonarQube',
       duration: '6 meses',
       role: 'DevOps Engineer',
@@ -506,7 +506,7 @@ function Projects() {
       id: 4,
       title: 'Optimización de Bases de Datos',
       description: 'Mejora de rendimiento y escalabilidad de bases de datos para aplicaciones de alta concurrencia. Implementación de estrategias de indexación y particionamiento.',
-      image: 'https://via.placeholder.com/600x400?text=Bases+de+Datos',
+      image: '/imagenes/project_database.png',
       technologies: 'PostgreSQL, MongoDB, Redis, SQL, Bash',
       duration: '5 meses',
       role: 'Administrador de BD',
@@ -586,7 +586,6 @@ function Projects() {
 }
 
 // Componente de contacto modernizado
-// Componente de contacto modernizado
 function Contact() {
   const [formData, setFormData] = useState({
     from_name: '',
@@ -635,33 +634,50 @@ function Contact() {
     <section id="contacto" className="section contact full-height">
       <div className="container">
         <div className="contact-container">
-          <h2 className="section-title">Contacto</h2>
+          <h2 className="section-title">Conectemos 🚀</h2>
 
           <div className="contact-content">
             <div className="contact-info">
               <div className="contact-card">
-                <h3 className="contact-subtitle">¿Hablamos de tu proyecto?</h3>
+                <h3 className="contact-subtitle">💬 ¡Hablemos de tu proyecto!</h3>
                 <p className="contact-text">
-                  Con mi experiencia en <span className="highlight">DevOps e infraestructura</span>, puedo ayudarte a optimizar
-                  tus procesos de desarrollo, mejorar la estabilidad de tus sistemas y reducir
-                  los tiempos de despliegue.
+                  ¿Necesitas optimizar tu infraestructura? ¿Implementar CI/CD?
+                  ¿Mejorar la estabilidad de tus sistemas?
                 </p>
                 <p className="contact-text">
-                  Si buscas un profesional que combine conocimientos técnicos con visión
-                  estratégica para llevar tu infraestructura al siguiente nivel, ¡conversemos
-                  sobre cómo puedo contribuir a tus objetivos!
+                  Con experiencia en <span className="highlight">DevOps, Kubernetes, Docker y Cloud</span>,
+                  puedo ayudarte a transformar tus procesos y llevar tu
+                  infraestructura al siguiente nivel.
                 </p>
 
                 <div className="contact-methods">
                   <div className="contact-method">
                     <div className="contact-icon">📧</div>
-                    <div className="contact-label">Email</div>
-                    <div className="contact-value">contacto@example.com</div>
+                    <div>
+                      <div className="contact-label">Email</div>
+                      <div className="contact-value">rodrigo@montecno.dev</div>
+                    </div>
                   </div>
                   <div className="contact-method">
                     <div className="contact-icon">📱</div>
-                    <div className="contact-label">Teléfono</div>
-                    <div className="contact-value">+123 456 7890</div>
+                    <div>
+                      <div className="contact-label">Teléfono</div>
+                      <div className="contact-value">+56 9 1234 5678</div>
+                    </div>
+                  </div>
+                  <div className="contact-method">
+                    <div className="contact-icon">💼</div>
+                    <div>
+                      <div className="contact-label">LinkedIn</div>
+                      <div className="contact-value">linkedin.com/in/rodrigo-montenegro</div>
+                    </div>
+                  </div>
+                  <div className="contact-method">
+                    <div className="contact-icon">🐙</div>
+                    <div>
+                      <div className="contact-label">GitHub</div>
+                      <div className="contact-value">github.com/rodrigomontenegro</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -711,6 +727,7 @@ function Contact() {
     </section>
   );
 }
+
 
 // Componente reutilizable para campos de entrada
 function InputField({ label, name, value, handleChange }) {

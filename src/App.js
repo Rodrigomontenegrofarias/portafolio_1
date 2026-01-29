@@ -1,8 +1,7 @@
-///mas/
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import './App.css';
-import latestTag from './latestTag.txt'; // Just import the file
+import latestTag from './latestTag.txt';
 
 // Componente de fondo de partículas
 const ParticleBackground = ({ theme }) => {
@@ -12,7 +11,6 @@ const ParticleBackground = ({ theme }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    // Configura el tamaño del canvas para que ocupe toda la pantalla
     const setCanvasSize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -21,21 +19,18 @@ const ParticleBackground = ({ theme }) => {
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    // Colores basados en tecnologías del currículum
-    // Modo claro: tonos de azul (Docker), verde (Node.js), naranja (Java)
-    // Modo oscuro: tonos de púrpura (Kubernetes), azul oscuro (React), verde oscuro (MongoDB)
     const colors = theme === 'dark'
       ? [
-        'rgba(102, 51, 153, 0.6)',  // Púrpura (Kubernetes)
-        'rgba(35, 78, 160, 0.5)',   // Azul oscuro (React)
-        'rgba(15, 120, 87, 0.5)',   // Verde oscuro (MongoDB)
-        'rgba(207, 100, 0, 0.5)'    // Naranja oscuro (Java)
+        'rgba(102, 51, 153, 0.6)',
+        'rgba(35, 78, 160, 0.5)',
+        'rgba(15, 120, 87, 0.5)',
+        'rgba(207, 100, 0, 0.5)'
       ]
       : [
-        'rgba(0, 150, 215, 0.4)',   // Azul (Docker)
-        'rgba(104, 159, 56, 0.4)',  // Verde (Node.js)
-        'rgba(242, 142, 28, 0.4)',  // Naranja (Java)
-        'rgba(41, 121, 255, 0.4)'   // Azul claro (React)
+        'rgba(0, 150, 215, 0.4)',
+        'rgba(104, 159, 56, 0.4)',
+        'rgba(242, 142, 28, 0.4)',
+        'rgba(41, 121, 255, 0.4)'
       ];
 
     let mousePosition = {
@@ -49,18 +44,15 @@ const ParticleBackground = ({ theme }) => {
       mousePosition.y = event.y;
     });
 
-    // Clase Partícula
     class Particle {
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1; // Tamaño reducido para un efecto más sutil
+        this.size = Math.random() * 3 + 1;
         this.baseX = this.x;
         this.baseY = this.y;
         this.density = (Math.random() * 30) + 1;
         this.color = colors[Math.floor(Math.random() * colors.length)];
-
-        // Velocidad de movimiento independiente para cada partícula
         this.speedFactor = Math.random() * 0.5 + 0.2;
       }
 
@@ -73,23 +65,17 @@ const ParticleBackground = ({ theme }) => {
       }
 
       update() {
-        // Comprueba la proximidad del cursor
         let dx = mousePosition.x - this.x;
         let dy = mousePosition.y - this.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance === 0) {
-          distance = 1; // Evitar división por cero
-        }
+        if (distance === 0) distance = 1;
 
         let forceDirectionX = dx / distance;
         let forceDirectionY = dy / distance;
-
-        // Distancia máxima para el efecto de cursor
         const maxDistance = 100;
         let force = (maxDistance - distance) / maxDistance;
 
-        // Evita valores negativos
         if (force < 0) force = 0;
 
         let directionX = (forceDirectionX * force * this.density) * -1;
@@ -99,24 +85,21 @@ const ParticleBackground = ({ theme }) => {
           this.x += directionX * this.speedFactor;
           this.y += directionY * this.speedFactor;
         } else {
-          // Regresa a la posición original cuando está lejos del cursor
           if (this.x !== this.baseX) {
             dx = this.x - this.baseX;
-            this.x -= dx / 15 * this.speedFactor; // Movimiento más suave
+            this.x -= dx / 15 * this.speedFactor;
           }
           if (this.y !== this.baseY) {
             dy = this.y - this.baseY;
-            this.y -= dy / 15 * this.speedFactor; // Movimiento más suave
+            this.y -= dy / 15 * this.speedFactor;
           }
         }
-
         this.draw();
       }
     }
 
-    // Inicializa las partículas
     const particlesArray = [];
-    const numberOfParticles = theme === 'dark' ? 70 : 80; // Menos partículas en modo oscuro
+    const numberOfParticles = theme === 'dark' ? 70 : 80;
 
     const init = () => {
       for (let i = 0; i < numberOfParticles; i++) {
@@ -126,24 +109,18 @@ const ParticleBackground = ({ theme }) => {
 
     init();
 
-    // Animación
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       for (let i = 0; i < particlesArray.length; i++) {
         particlesArray[i].update();
       }
-
-      // Dibuja líneas entre partículas cercanas
       connectParticles();
-
-      requestAnimationFrame(animate); // Asegura que la animación continúe
+      requestAnimationFrame(animate);
     };
 
-    // Conecta partículas que están cerca
     const connectParticles = () => {
-      const connectionDistance = theme === 'dark' ? 100 : 120; // Distinta distancia según el tema
-      const lineOpacity = theme === 'dark' ? 0.5 : 0.3; // Mayor opacidad en modo oscuro
+      const connectionDistance = theme === 'dark' ? 100 : 120;
+      const lineOpacity = theme === 'dark' ? 0.5 : 0.3;
 
       for (let a = 0; a < particlesArray.length; a++) {
         for (let b = a; b < particlesArray.length; b++) {
@@ -152,13 +129,12 @@ const ParticleBackground = ({ theme }) => {
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < connectionDistance) {
-            // Color de línea según el tema
             const lineColor = theme === 'dark'
               ? `rgba(90, 90, 120, ${lineOpacity * (1 - distance / connectionDistance)})`
               : `rgba(100, 149, 237, ${lineOpacity * (1 - distance / connectionDistance)})`;
 
             ctx.strokeStyle = lineColor;
-            ctx.lineWidth = theme === 'dark' ? 0.8 : 0.6; // Líneas ligeramente más gruesas en modo oscuro
+            ctx.lineWidth = theme === 'dark' ? 0.8 : 0.6;
             ctx.beginPath();
             ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
             ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
@@ -168,10 +144,8 @@ const ParticleBackground = ({ theme }) => {
       }
     };
 
-    // Inicia la animación
     animate();
 
-    // Limpieza
     return () => {
       window.removeEventListener('resize', setCanvasSize);
       window.removeEventListener('mousemove', (event) => {
@@ -192,23 +166,18 @@ const ParticleBackground = ({ theme }) => {
         height: '100%',
         pointerEvents: 'none',
         zIndex: 0,
-        opacity: theme === 'dark' ? 0.8 : 0.7 // Ligeramente más visible en modo oscuro
+        opacity: theme === 'dark' ? 0.8 : 0.7
       }}
     />
   );
 };
 
-// Componente de cabecera
 function Header({ toggleTheme, theme }) {
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Alternar estado del menú
   const toggleMenu = () => setMenuOpen(!menuOpen);
-
-  // Clases de encabezado y nav basadas en tema y estado del menú
   const headerClass = `header ${theme}`;
   const navClass = `header-nav ${menuOpen ? 'open' : ''}`;
-  const boxClass = `menu-box ${theme}`; // Clase para el recuadro
+  const boxClass = `menu-box ${theme}`;
 
   return (
     <header className={headerClass}>
@@ -232,29 +201,26 @@ function Header({ toggleTheme, theme }) {
           ☰
         </button>
       </div>
-      {/* Recuadro debajo del menú */}
       <div className={boxClass}></div>
     </header>
   );
 }
 
-// Componente de inicio modernizado
 function Home() {
-  const [tagContent, setTagContent] = useState(''); // Inicializa como vacío
+  const [tagContent, setTagContent] = useState('');
 
   useEffect(() => {
     const fetchTag = async () => {
       try {
         const response = await fetch(latestTag);
-        const text = await response.text(); // Obtén el contenido como texto
-        setTagContent(text); // Actualiza el estado con el contenido
+        const text = await response.text();
+        setTagContent(text);
       } catch (error) {
         console.error('Error al cargar la etiqueta:', error);
       }
     };
-
-    fetchTag(); // Llama a la función para cargar la etiqueta
-  }, []); // Solo se ejecuta una vez al montar el componente
+    fetchTag();
+  }, []);
 
   return (
     <section id="inicio" className="section home full-height">
@@ -292,7 +258,6 @@ function Home() {
   );
 }
 
-// Datos de Experiencia (Placeholder - Remplazar con datos reales del CV)
 const experienceData = [
   {
     id: 1,
@@ -320,7 +285,6 @@ const experienceData = [
   }
 ];
 
-// Componente de Experiencia
 function Experience() {
   return (
     <section id="experiencia" className="section experience full-height">
@@ -359,9 +323,7 @@ function Experience() {
   );
 }
 
-// Componente sobre mí
 function About() {
-  // Skills con iconos
   const skills = [
     { name: 'Contenedorización y Orquestación', icon: '🐳', description: 'Docker, Kubernetes, gestión de contenedores y clusters' },
     { name: 'CI/CD', icon: '⚙️', description: 'Jenkins, Azure DevOps, automatización de despliegues' },
@@ -394,7 +356,7 @@ function About() {
 
             <div className="about-image-container">
               <div className="profile-image">
-                <img src="https://via.placeholder.com/300" alt="Rodrigo Montenegro" />
+                <img src="/imagenes/profile.png" alt="Rodrigo Montenegro" />
                 <div className="image-overlay">
                   <span className="name-badge">Rodrigo Montenegro</span>
                 </div>
@@ -421,7 +383,6 @@ function About() {
   );
 }
 
-// Componente de detalles del proyecto
 function ProjectDetail({ project, onClose }) {
   return (
     <div className="project-detail">
@@ -459,18 +420,16 @@ function ProjectDetail({ project, onClose }) {
   );
 }
 
-// Componente de proyectos
 function Projects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [filter, setFilter] = useState('todos');
 
-  // Datos de proyectos mejorados con información basada en tu CV
   const projects = [
     {
       id: 1,
       title: 'Infraestructura Cloud',
       description: 'Implementación de arquitectura escalable en AWS para una plataforma de comercio electrónico. Diseño e infraestructura utilizando contenedores Docker y orquestación con Kubernetes.',
-      image: 'https://via.placeholder.com/600x400?text=Infraestructura+Cloud',
+      image: '/imagenes/project_cloud.png',
       technologies: 'Docker, Kubernetes, AWS, Terraform, Jenkins',
       duration: '4 meses',
       role: 'DevOps Engineer',
@@ -482,7 +441,7 @@ function Projects() {
       id: 2,
       title: 'Sistema de Monitoreo',
       description: 'Desarrollo de una plataforma integrada de monitoreo para identificar y resolver problemas en tiempo real. Implementación de alertas proactivas y dashboards personalizados.',
-      image: 'https://via.placeholder.com/600x400?text=Sistema+de+Monitoreo',
+      image: '/imagenes/project_monitoring.png',
       technologies: 'Nagios, Prometheus, Grafana, Linux, Bash',
       duration: '3 meses',
       role: 'Especialista en Sistemas',
@@ -494,7 +453,7 @@ function Projects() {
       id: 3,
       title: 'Pipelines CI/CD',
       description: 'Implementación de pipelines automatizados para pruebas y despliegue continuo en múltiples entornos. Incluye aprobaciones configurables y rollbacks automáticos.',
-      image: 'https://via.placeholder.com/600x400?text=Pipelines+CI/CD',
+      image: '/imagenes/project_cicd.png',
       technologies: 'Jenkins, Azure DevOps, Docker, Git, SonarQube',
       duration: '6 meses',
       role: 'DevOps Engineer',
@@ -506,7 +465,7 @@ function Projects() {
       id: 4,
       title: 'Optimización de Bases de Datos',
       description: 'Mejora de rendimiento y escalabilidad de bases de datos para aplicaciones de alta concurrencia. Implementación de estrategias de indexación y particionamiento.',
-      image: 'https://via.placeholder.com/600x400?text=Bases+de+Datos',
+      image: '/imagenes/project_database.png',
       technologies: 'PostgreSQL, MongoDB, Redis, SQL, Bash',
       duration: '5 meses',
       role: 'Administrador de BD',
@@ -516,10 +475,8 @@ function Projects() {
     },
   ];
 
-  // Obtener categorías únicas para filtros
   const categories = ['todos', ...new Set(projects.map(project => project.category))];
 
-  // Filtrar proyectos
   const filteredProjects = filter === 'todos'
     ? projects
     : projects.filter(project => project.category === filter);
@@ -532,7 +489,6 @@ function Projects() {
           Estos proyectos demuestran mi experiencia en infraestructura, automatización y desarrollo de soluciones DevOps.
         </p>
 
-        {/* Filtros simples */}
         <div className="filter-container">
           {categories.map(category => (
             <button
@@ -545,7 +501,6 @@ function Projects() {
           ))}
         </div>
 
-        {/* Grilla de proyectos */}
         <div className="projects-grid">
           {filteredProjects.map(project => (
             <div
@@ -572,7 +527,6 @@ function Projects() {
           ))}
         </div>
 
-        {/* Modal de proyecto */}
         {selectedProject && (
           <div className="modal">
             <div className="modal-content">
@@ -585,7 +539,6 @@ function Projects() {
   );
 }
 
-// Componente de contacto modernizado
 // Componente de contacto modernizado
 function Contact() {
   const [formData, setFormData] = useState({
@@ -606,7 +559,6 @@ function Contact() {
     setLoading(true);
     setStatus('Enviando...');
 
-    // Usar el mismo correo para reply_to
     const dataToSend = {
       ...formData,
       reply_to: formData.from_email
@@ -635,33 +587,50 @@ function Contact() {
     <section id="contacto" className="section contact full-height">
       <div className="container">
         <div className="contact-container">
-          <h2 className="section-title">Contacto</h2>
+          <h2 className="section-title">Conectemos 🚀</h2>
 
           <div className="contact-content">
             <div className="contact-info">
               <div className="contact-card">
-                <h3 className="contact-subtitle">¿Hablamos de tu proyecto?</h3>
+                <h3 className="contact-subtitle">💬 ¡Hablemos de tu proyecto!</h3>
                 <p className="contact-text">
-                  Con mi experiencia en <span className="highlight">DevOps e infraestructura</span>, puedo ayudarte a optimizar
-                  tus procesos de desarrollo, mejorar la estabilidad de tus sistemas y reducir
-                  los tiempos de despliegue.
+                  ¿Necesitas optimizar tu infraestructura? ¿Implementar CI/CD?
+                  ¿Mejorar la estabilidad de tus sistemas?
                 </p>
                 <p className="contact-text">
-                  Si buscas un profesional que combine conocimientos técnicos con visión
-                  estratégica para llevar tu infraestructura al siguiente nivel, ¡conversemos
-                  sobre cómo puedo contribuir a tus objetivos!
+                  Con experiencia en <span className="highlight">DevOps, Kubernetes, Docker y Cloud</span>,
+                  puedo ayudarte a transformar tus procesos y llevar tu
+                  infraestructura al siguiente nivel.
                 </p>
 
                 <div className="contact-methods">
                   <div className="contact-method">
                     <div className="contact-icon">📧</div>
-                    <div className="contact-label">Email</div>
-                    <div className="contact-value">contacto@example.com</div>
+                    <div>
+                      <div className="contact-label">Email</div>
+                      <div className="contact-value">rodrigo@montecno.dev</div>
+                    </div>
                   </div>
                   <div className="contact-method">
                     <div className="contact-icon">📱</div>
-                    <div className="contact-label">Teléfono</div>
-                    <div className="contact-value">+123 456 7890</div>
+                    <div>
+                      <div className="contact-label">Teléfono</div>
+                      <div className="contact-value">+56 9 1234 5678</div>
+                    </div>
+                  </div>
+                  <div className="contact-method">
+                    <div className="contact-icon">💼</div>
+                    <div>
+                      <div className="contact-label">LinkedIn</div>
+                      <div className="contact-value">linkedin.com/in/rodrigo-montenegro</div>
+                    </div>
+                  </div>
+                  <div className="contact-method">
+                    <div className="contact-icon">🐙</div>
+                    <div>
+                      <div className="contact-label">GitHub</div>
+                      <div className="contact-value">github.com/rodrigomontenegro</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -712,7 +681,6 @@ function Contact() {
   );
 }
 
-// Componente reutilizable para campos de entrada
 function InputField({ label, name, value, handleChange }) {
   return (
     <div className="form-group">
@@ -730,7 +698,6 @@ function InputField({ label, name, value, handleChange }) {
   );
 }
 
-// Componente reutilizable para textarea
 function TextAreaField({ label, name, value, handleChange }) {
   return (
     <div className="form-group">
@@ -748,7 +715,6 @@ function TextAreaField({ label, name, value, handleChange }) {
   );
 }
 
-// Componente de footer
 function Footer({ theme }) {
   const footerClass = `footer ${theme}`;
   return (
@@ -760,14 +726,13 @@ function Footer({ theme }) {
   );
 }
 
-// Componente principal de la aplicación
 function App() {
   const [theme, setTheme] = useState('light');
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   useEffect(() => {
-    document.body.className = theme; // Aplicar el tema cuando cambie
+    document.body.className = theme;
   }, [theme]);
 
   return (

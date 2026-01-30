@@ -85,6 +85,10 @@ stages:
       - job: BuildJob
         displayName: 'Build Job'
         steps:
+          - checkout: self
+            fetchDepth: 0
+            clean: true
+            displayName: 'Checkout Source with Tags'
           - task: NodeTool@0
             inputs:
               versionSpec: '16.x'
@@ -92,8 +96,11 @@ stages:
 
           - bash: |
               set -euo pipefail
+              echo "=== LIMPIEZA EXPLICITA ==="
+              rm -rf node_modules build
+              echo "Carpetas node_modules y build eliminadas."
               npm ci
-            displayName: 'Install dependencies'
+            displayName: 'Install dependencies (Clean)'
 
           - bash: |
               set -euo pipefail

@@ -14,6 +14,9 @@ trigger:
       - README.md
       - docs/*
 
+# Kill switch: NO ejecutar pipeline por Pull Requests
+pr: none
+
 pool:
   name: Default
 

@@ -1,18 +1,11 @@
 # azure-pipelines.yml
-# Se activa en:
-# - Push / merge a main  -> despliegue a PRODUCCIÓN
-# - Pull Request a main  -> BUILD + PREVIEW (Netlify)
+# Flujo final:
+# - SOLO se ejecuta en push/merge a main
+# - Construye React (build/)
+# - Publica a Netlify PROD subiendo build.zip por API
+# - Publica evidencias como artifacts (status, drop, deploy-info)
 
 trigger:
-  branches:
-    include:
-      - main
-  paths:
-    exclude:
-      - README.md
-      - docs/*
-
-pr:
   branches:
     include:
       - main
@@ -25,14 +18,14 @@ pool:
   name: Default
 
 variables:
-  # === IMPORTANTE: Variable Group desde Library ===
+  # Variable Group desde Library
   - group: variable
 
-  # Variables del sistema
+  # Sistema
   - name: system.debug
     value: false
 
-  # Variables del proyecto
+  # Proyecto
   - name: deployTag
     value: $(Build.BuildNumber)
   - name: branchName
@@ -46,7 +39,7 @@ variables:
 
 stages:
   - stage: StatusUpdate
-    displayName: 'Update Merge/PR Status'
+    displayName: 'Update Status'
     jobs:
       - job: StatusJob
         displayName: 'Status Tracking'
@@ -88,7 +81,8 @@ stages:
           - checkout: self
             fetchDepth: 0
             clean: true
-            displayName: 'Checkout Source with Tags'
+            persistCredentials: true
+            displayName: 'Checkout Source'
 
           - task: NodeTool@0
             inputs:
@@ -157,7 +151,7 @@ stages:
               fi
 
               echo "Build completado exitosamente ✓"
-              ls -la build/
+              ls -la build/ | head -n 50
             displayName: 'Build React Project'
             env:
               REACT_APP_EMAILJS_SERVICE_ID: $(REACT_APP_EMAILJS_SERVICE_ID)
@@ -198,119 +192,8 @@ stages:
               artifactName: 'drop'
             displayName: 'Publish artifacts'
 
-  - stage: DeployPreview
-    displayName: 'Deploy Preview (PR)'
-    dependsOn: Build
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-    jobs:
-      - job: DeployPreviewJob
-        displayName: 'Deploy Preview Job'
-        steps:
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'drop'
-              downloadPath: '$(System.ArtifactsDirectory)'
-            displayName: 'Download build artifacts'
-
-          - bash: |
-              set -euo pipefail
-
-              : "${NETLIFY_AUTH_TOKEN:?ERROR: NETLIFY_AUTH_TOKEN no está configurada}"
-              : "${NETLIFY_SITE_ID:?ERROR: NETLIFY_SITE_ID no está configurada}"
-
-              ZIP_PATH="$(System.ArtifactsDirectory)/drop/build.zip"
-              if [ ! -f "$ZIP_PATH" ]; then
-                echo "ERROR: Archivo build.zip no encontrado en $ZIP_PATH"
-                ls -la "$(System.ArtifactsDirectory)/drop" || true
-                exit 1
-              fi
-
-              PR_ID="${SYSTEM_PULLREQUEST_PULLREQUESTID:-unknown}"
-              SRC_BRANCH="${SYSTEM_PULLREQUEST_SOURCEBRANCH:-unknown}"
-              TGT_BRANCH="${SYSTEM_PULLREQUEST_TARGETBRANCH:-unknown}"
-
-              echo "Iniciando PREVIEW deploy en Netlify..."
-              echo "PR: $PR_ID"
-              echo "Source: $SRC_BRANCH"
-              echo "Target: $TGT_BRANCH"
-              echo "Site: $NETLIFY_SITE_ID"
-              echo "Zip: $ZIP_PATH"
-
-              DEPLOY_RESPONSE="$(curl -sS -X POST \
-                -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
-                -H "Content-Type: application/zip" \
-                --data-binary "@$ZIP_PATH" \
-                "https://api.netlify.com/api/v1/sites/$NETLIFY_SITE_ID/deploys")"
-
-              DEPLOY_ID="$(echo "$DEPLOY_RESPONSE" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -n1)"
-              if [ -z "${DEPLOY_ID:-}" ]; then
-                echo "ERROR: No se pudo obtener deploy_id (preview)"
-                echo "Respuesta: $DEPLOY_RESPONSE"
-                exit 1
-              fi
-
-              echo "Preview Deploy ID: $DEPLOY_ID"
-
-              echo "Esperando que el preview deploy quede listo..."
-              FINAL_STATE=""
-              DEPLOY_URL=""
-              for i in $(seq 1 40); do
-                DEPLOY_INFO="$(curl -sS -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
-                  "https://api.netlify.com/api/v1/deploys/$DEPLOY_ID")"
-
-                STATE="$(echo "$DEPLOY_INFO" | sed -n 's/.*"state":"\([^"]*\)".*/\1/p' | head -n1)"
-                DEPLOY_URL="$(echo "$DEPLOY_INFO" | sed -n 's/.*"deploy_ssl_url":"\([^"]*\)".*/\1/p' | head -n1)"
-
-                echo "Estado: ${STATE:-unknown} (intento $i)"
-                [ -n "$DEPLOY_URL" ] && echo "Preview URL: $DEPLOY_URL"
-
-                case "$STATE" in
-                  ready|current|uploaded)
-                    FINAL_STATE="$STATE"
-                    break
-                    ;;
-                  error)
-                    echo "ERROR: Preview deploy en estado error"
-                    echo "$DEPLOY_INFO"
-                    exit 1
-                    ;;
-                esac
-
-                sleep 5
-              done
-
-              if [ -z "${FINAL_STATE:-}" ]; then
-                echo "ERROR: Timeout esperando preview listo. Revisar dashboard."
-                echo "Dashboard: https://app.netlify.com/sites/$NETLIFY_SITE_ID/deploys"
-                exit 1
-              fi
-
-              printf "pr_id=%s\nstate=%s\npreview_url=%s\ndeploy_id=%s\ndashboard=https://app.netlify.com/sites/%s/deploys\n" \
-                "$PR_ID" "$FINAL_STATE" "${DEPLOY_URL:-}" "$DEPLOY_ID" "$NETLIFY_SITE_ID" > netlify_preview.txt
-
-              cat netlify_preview.txt
-              echo "Preview OK ✓"
-            displayName: 'Deploy Preview (stable)'
-            env:
-              NETLIFY_AUTH_TOKEN: $(NETLIFY_AUTH_TOKEN)
-              NETLIFY_SITE_ID: $(NETLIFY_SITE_ID)
-
-          - task: CopyFiles@2
-            inputs:
-              Contents: 'netlify_preview.txt'
-              TargetFolder: '$(Build.ArtifactStagingDirectory)'
-            displayName: 'Stage netlify_preview.txt'
-
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'preview-info'
-            displayName: 'Publish preview info'
-
   - stage: Deploy
-    displayName: 'Deploy to Production (main only)'
+    displayName: 'Deploy to Netlify PROD (main only)'
     dependsOn: Build
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
     jobs:
@@ -361,12 +244,16 @@ stages:
 
               echo "Esperando que el deploy quede listo..."
               FINAL_STATE=""
+              FINAL_URL=""
               for i in $(seq 1 40); do
                 DEPLOY_INFO="$(curl -sS -H "Authorization: Bearer $NETLIFY_AUTH_TOKEN" \
                   "https://api.netlify.com/api/v1/deploys/$DEPLOY_ID")"
 
                 STATE="$(echo "$DEPLOY_INFO" | sed -n 's/.*"state":"\([^"]*\)".*/\1/p' | head -n1)"
+                FINAL_URL="$(echo "$DEPLOY_INFO" | sed -n 's/.*"deploy_ssl_url":"\([^"]*\)".*/\1/p' | head -n1)"
+
                 echo "Estado: ${STATE:-unknown} (intento $i)"
+                [ -n "$FINAL_URL" ] && echo "Deploy URL: $FINAL_URL"
 
                 case "$STATE" in
                   ready|current|uploaded)
@@ -389,8 +276,8 @@ stages:
                 exit 1
               fi
 
-              printf "deploy_id=%s\nstate=%s\ndashboard=https://app.netlify.com/sites/%s/deploys\n" \
-                "$DEPLOY_ID" "$FINAL_STATE" "$NETLIFY_SITE_ID" > netlify_deploy.txt
+              printf "deploy_id=%s\nstate=%s\nurl=%s\ndashboard=https://app.netlify.com/sites/%s/deploys\n" \
+                "$DEPLOY_ID" "$FINAL_STATE" "${FINAL_URL:-}" "$NETLIFY_SITE_ID" > netlify_deploy.txt
               cat netlify_deploy.txt
 
               echo "Deploy PROD OK ✓"

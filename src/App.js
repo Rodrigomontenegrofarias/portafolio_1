@@ -261,29 +261,46 @@ function Home() {
 const experienceData = [
   {
     id: 1,
-    company: "Empresa Tecnológica A",
-    role: "DevOps Engineer Senior",
-    period: "2021 - Presente",
-    description: "Liderazgo en la migración de infraestructura a AWS usando Terraform. Implementación de pipelines CI/CD con Jenkins y GitHub Actions reduciendo el time-to-market en un 40%.",
-    technologies: ["AWS", "Terraform", "Kubernetes", "Python"]
+    company: "ACL (Cliente: Falabella Financiero)",
+    role: "DevOps Engineer",
+    period: "2025 - Presente",
+    description: "Continuidad operacional del ecosistema Kubernetes multi-cloud (Azure/GCP). Resolución de incidentes productivos, troubleshooting de networking entre servicios (RabbitMQ, Redis, APIs y DBs) y ajustes de firewall (NSG/iRules). Implementación de cambios mediante Terraform y soporte a equipos de desarrollo.",
+    technologies: ["Kubernetes", "Azure", "GCP", "Terraform", "Networking", "RabbitMQ", "Vault"]
   },
   {
     id: 2,
-    company: "Consultora IT Global",
-    role: "SysAdmin / DevOps",
-    period: "2018 - 2021",
-    description: "Administración de cluster Kubernetes en producción. Automatización de tareas de mantenimiento con Bash y Ansible. Gestión de bases de datos PostgreSQL de alta disponibilidad.",
-    technologies: ["Linux", "Ansible", "Docker", "PostgreSQL"]
+    company: "Ximple Tech (Cliente: Falabella Financiero)",
+    role: "DevOps Engineer",
+    period: "2025",
+    description: "Administración de plataforma DevOps y servicios core: Vault, Harbor, Kong y ElasticSearch/Kibana. Configuración de conectividad entre ambientes y normalización de escalamiento de clusters.",
+    technologies: ["Kubernetes", "Vault", "Kong", "ElasticSearch", "CI/CD", "Cloud"]
   },
   {
     id: 3,
-    company: "Startup Innovadora",
-    role: "Junior Developer & Support",
-    period: "2016 - 2018",
-    description: "Desarrollo backend con Node.js y soporte a infraestructura cloud. Implementación de monitoreo básico con Nagios.",
-    technologies: ["Node.js", "MySQL", "AWS EC2"]
+    company: "Ayelen",
+    role: "DevOps Infrastructure Engineer",
+    period: "2023 - 2025",
+    description: "Administración de servidores Linux RedHat, respaldo y recuperación de PostgreSQL/MongoDB, automatización con Bash y monitoreo con Nagios. Despliegues de APIs con Jenkins sobre Docker y Kubernetes.",
+    technologies: ["Linux", "PostgreSQL", "MongoDB", "Docker", "Jenkins", "Bash", "Nagios"]
+  },
+  {
+    id: 4,
+    company: "EGT (Seidor)",
+    role: "DevOps Engineer",
+    period: "2022 - 2023",
+    description: "Administración de plataformas con Docker y Kubernetes, monitoreo con Prometheus/Grafana y gestión de logs de APIs. Instalación y configuración de RabbitMQ y soporte operativo bajo metodología RFC.",
+    technologies: ["Docker", "Kubernetes", "Prometheus", "Grafana", "RabbitMQ", "Linux"]
+  },
+  {
+    id: 5,
+    company: "Trifenix",
+    role: "DevOps & CI/CD",
+    period: "2021 - 2022",
+    description: "Implementación de contenedores Docker y pipelines CI/CD en Azure DevOps. Integración de SonarQube y despliegue de aplicaciones en AWS usando Terraform.",
+    technologies: ["Docker", "Azure DevOps", "SonarQube", "AWS", "Terraform", "CI/CD"]
   }
 ];
+
 
 function Experience() {
   return (

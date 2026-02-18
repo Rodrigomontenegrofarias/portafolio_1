@@ -301,7 +301,6 @@ const experienceData = [
   }
 ];
 
-
 function Experience() {
   return (
     <section id="experiencia" className="section experience full-height">

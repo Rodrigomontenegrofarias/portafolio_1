@@ -402,7 +402,7 @@ function About() {
 
 function ProjectDetail({ project, onClose }) {
   return (
-    <div className="project-detail">
+    <div className="project-detail" onClick={(e) => e.stopPropagation()}>
       <div className="project-detail-header">
         <h3>{project.title}</h3>
         <button onClick={onClose} className="close-btn">×</button>
@@ -414,7 +414,7 @@ function ProjectDetail({ project, onClose }) {
         </div>
 
         <div className="project-info">
-          <p className="project-description">{project.description}</p>
+          <div className="project-description" dangerouslySetInnerHTML={{ __html: project.description }}></div>
 
           <h4>Detalles del proyecto:</h4>
           <ul className="project-details-list">
@@ -424,13 +424,7 @@ function ProjectDetail({ project, onClose }) {
             {project.results && <li><span>Resultados:</span> {project.results}</li>}
           </ul>
 
-          {project.link && (
-            <div className="project-links">
-              <a href={project.link} target="_blank" rel="noopener noreferrer" className="project-link">
-                Ver Proyecto
-              </a>
-            </div>
-          )}
+
         </div>
       </div>
     </div>
@@ -441,55 +435,142 @@ function Projects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [filter, setFilter] = useState('todos');
 
+  // Función unificada para cerrar el modal, ya sea haciendo clic en el overlay o en el botón de cierre.
+  const handleCloseDetail = () => {
+    setSelectedProject(null);
+  };
+
   const projects = [
     {
       id: 1,
-      title: 'Infraestructura Cloud',
-      description: 'Implementación de arquitectura escalable en AWS para una plataforma de comercio electrónico. Diseño e infraestructura utilizando contenedores Docker y orquestación con Kubernetes.',
-      image: '/imagenes/project_cloud.png',
-      technologies: 'Docker, Kubernetes, AWS, Terraform, Jenkins',
-      duration: '4 meses',
+      title: 'Gestión de Infraestructura Multi-Cloud (Falabella)',
+      summary: 'Gestión y optimización de un ecosistema multi-cloud complejo, enfocado en infraestructura como código, seguridad y administración de servicios core.',
+      description: `
+        <h5>Responsabilidades Clave:</h5>
+        <ul>
+          <li>Resolución de pruebas de conectividad entre clusters, bases de datos y servicios en múltiples ambientes.</li>
+          <li>Revisión y merge de MR para cambios de infraestructura utilizando Terraform.</li>
+          <li>Configuración de reglas de firewall (NSG, irules) para permitir conectividad entre servicios.</li>
+          <li>Regularización de escalamiento de clusters Kubernetes ajustando <code>node_max_count</code>.</li>
+          <li>Administración de servicios core: Vault, Harbor, Kong, RabbitMQ y ElasticSearch/Kibana.</li>
+        </ul>
+        <h5>Logros Específicos:</h5>
+        <ul>
+          <li>Implementación de Storage Accounts en Azure desde cero, incluyendo VNet y políticas de acceso.</li>
+          <li>Configuración de permisos granulares en buckets de GCP con Service Accounts y roles IAM.</li>
+          <li>Resolución de errores de certificados SSL/TLS (error 509) mediante redeployment de planes Terraform.</li>
+        </ul>
+      `,
+      image: 'https://placehold.co/800x600/A374FF/FFFFFF?text=Gesti%C3%B3n+Cloud',
+      technologies: 'Kubernetes, GCP, Azure, Terraform, Vault, Harbor, Kong, RabbitMQ, ElasticSearch, Jenkins',
+      duration: 'Continuo',
       role: 'DevOps Engineer',
-      results: 'Reducción del 70% en tiempos de despliegue y mejora en disponibilidad a 99.9%',
+      results: 'Gestión y optimización de un ecosistema multi-cloud complejo.',
       category: 'Infraestructura',
-      link: '#'
+      link: '#',
+      repo_link: 'https://github.com/rodrigomontenegro/sherpa-falabella-infra'
     },
     {
       id: 2,
-      title: 'Sistema de Monitoreo',
-      description: 'Desarrollo de una plataforma integrada de monitoreo para identificar y resolver problemas en tiempo real. Implementación de alertas proactivas y dashboards personalizados.',
-      image: '/imagenes/project_monitoring.png',
-      technologies: 'Nagios, Prometheus, Grafana, Linux, Bash',
-      duration: '3 meses',
-      role: 'Especialista en Sistemas',
-      results: 'Reducción del 60% en tiempo de resolución de incidentes',
-      category: 'Monitoreo',
-      link: '#'
+      title: 'Administración y Migración de Sistemas (Ayelen)',
+      summary: 'Modernización de infraestructura y automatización de procesos críticos de bases de datos, incluyendo migraciones de sistemas y configuración para alta disponibilidad.',
+      description: `
+        <h5>Responsabilidades Clave:</h5>
+        <ul>
+          <li>Instalación y configuración de bases de datos (PostgreSQL, MongoDB) en servidores Red Hat.</li>
+          <li>Automatización de dumps y restauraciones de bases de datos en ambientes QA y PRD.</li>
+          <li>Desarrollo de pipelines en Jenkins para despliegue de APIs y servicios.</li>
+          <li>Implementación de scripts en Bash para monitoreo y gestión de logs en Kubernetes.</li>
+          <li>Despliegue y administración de aplicaciones en WebLogic y GlassFish.</li>
+        </ul>
+        <h5>Logros Específicos:</h5>
+        <ul>
+          <li>Investigación y configuración de PostgreSQL 15.5 para roles Master/Slave y recuperación ante desastres.</li>
+          <li>Lideré la migración de jobs de un Jenkins legacy a una nueva instancia con pipelines modernos en 2024.</li>
+          <li>Dirigí la migración de alertas a una nueva plataforma Nagios, incluyendo manuales de integración.</li>
+        </ul>
+      `,
+      image: 'https://placehold.co/800x600/5DD9C1/FFFFFF?text=Bases+de+Datos',
+      technologies: 'MongoDB, PostgreSQL, Docker, Jenkins, Nagios, Bash, Kubernetes, Nginx, WebLogic, Terraform, AWS',
+      duration: '2 años',
+      role: 'DevOps Infrastructure Engineer',
+      results: 'Modernización de infraestructura y automatización de procesos críticos de BD.',
+      category: 'Bases de Datos',
+      link: '#',
+      repo_link: 'https://github.com/rodrigomontenegro/ayelen-system-migration'
     },
     {
       id: 3,
-      title: 'Pipelines CI/CD',
-      description: 'Implementación de pipelines automatizados para pruebas y despliegue continuo en múltiples entornos. Incluye aprobaciones configurables y rollbacks automáticos.',
-      image: '/imagenes/project_cicd.png',
-      technologies: 'Jenkins, Azure DevOps, Docker, Git, SonarQube',
-      duration: '6 meses',
-      role: 'DevOps Engineer',
-      results: 'Reducción del ciclo de entrega de 5 días a menos de 2 horas',
+      title: 'CI/CD y Contenerización (Proyecto AGRO)',
+      summary: 'Establecimiento de un flujo de CI/CD completo desde Azure DevOps hacia AWS, utilizando Docker, Terraform y SonarQube para análisis de calidad de código.',
+      description: `
+        <h5>Responsabilidades Clave:</h5>
+        <ul>
+          <li>Investigación y documentación de la implementación de Docker en Azure.</li>
+          <li>Implementación de contenedores de la página web localmente utilizando Docker.</li>
+          <li>Configuración de SonarQube para la verificación automática de calidad de código.</li>
+          <li>Integración y distribución continua (CI/CD) desde Azure DevOps.</li>
+          <li>Despliegue de la página web en AWS y configuración de CI/CD desde Azure DevOps.</li>
+        </ul>
+      `,
+      image: 'https://placehold.co/800x600/FFC107/FFFFFF?text=CI/CD',
+      technologies: 'Docker, SonarQube, AWS, Terraform, Azure DevOps, Azure Board',
+      duration: 'N/A',
+      role: 'DevOps & CI/CD',
+      results: 'Establecimiento de un flujo de CI/CD completo con análisis de calidad de código.',
       category: 'DevOps',
-      link: '#'
+      link: '#',
+      repo_link: 'https://github.com/rodrigomontenegro/agro-project-cicd'
     },
     {
       id: 4,
-      title: 'Optimización de Bases de Datos',
-      description: 'Mejora de rendimiento y escalabilidad de bases de datos para aplicaciones de alta concurrencia. Implementación de estrategias de indexación y particionamiento.',
-      image: '/imagenes/project_database.png',
-      technologies: 'PostgreSQL, MongoDB, Redis, SQL, Bash',
-      duration: '5 meses',
-      role: 'Administrador de BD',
-      results: 'Mejora del 80% en rendimiento de consultas críticas',
-      category: 'Bases de Datos',
-      link: '#'
+      title: 'Plataforma de Monitoreo (PSD)',
+      summary: 'Creación de una solución de monitoreo integral con Prometheus, Grafana y ELK para la visualización de métricas de servidor y estado de aplicaciones.',
+      description: `
+        <h5>Responsabilidades Clave:</h5>
+        <ul>
+          <li>Resolución de problemas relacionados con la plataforma y bases de datos en Oracle y Postgres.</li>
+          <li>Desarrollo de software para la visualización de métricas del servidor.</li>
+          <li>Implementación del stack de monitoreo: Prometheus, Alertmanager, y Blackbox.</li>
+          <li>Creación de dashboards en Grafana para visualización de datos.</li>
+          <li>Documentación de tecnologías y procesos en Confluence.</li>
+        </ul>
+      `,
+      image: 'https://placehold.co/800x600/FF6B6B/FFFFFF?text=Monitoreo',
+      technologies: 'Oracle, Postgres, Spring Boot, Prometheus, Alertmanager, Blackbox, Grafana, Jira',
+      duration: 'N/A',
+      role: 'DevOps Engineer',
+      results: 'Creación de una solución de monitoreo integral para la visualización de métricas de servidor.',
+      category: 'Monitoreo',
+      link: '#',
+      repo_link: 'https://github.com/rodrigomontenegro/psd-monitoring-stack'
     },
+    {
+      id: 5,
+      title: 'Portafolio Personal Interactivo',
+      summary: 'Creación de esta misma página web como una Single Page Application (SPA) utilizando React, enfocada en la componentización y la interactividad.',
+      description: `
+        <h5>Desarrollo y Características:</h5>
+        <ul>
+          <li>Desarrollo de una Single Page Application (SPA) con <strong>React</strong> para una experiencia de usuario fluida y sin recargas.</li>
+          <li>Implementación de componentes reutilizables, como las tarjetas de proyecto y el detalle modal.</li>
+          <li>Uso de <strong>React Hooks</strong> (<code>useState</code>) para gestionar el estado de la aplicación, como el filtrado de proyectos y la visualización del modal.</li>
+          <li>Renderizado dinámico de contenido a partir de un array de objetos, facilitando la adición de nuevos proyectos.</li>
+          <li>Maquetación con HTML5 y CSS, buscando un diseño limpio y responsive.</li>
+          <li>Configuración de un pipeline de <strong>CI/CD con Azure DevOps</strong> para la integración y el versionamiento.</li>
+          <li>Aplicación de <strong>versionamiento semántico</strong> para la gestión de releases.</li>
+          <li>Despliegue continuo en <strong>Netlify</strong>, integrado con el repositorio de GitHub.</li>
+        </ul>
+      `,
+      image: 'https://placehold.co/800x600/4D96FF/FFFFFF?text=Portafolio+React',
+      technologies: 'React, JavaScript (ES6+), JSX, HTML5, CSS, Azure DevOps, Netlify',
+      duration: 'N/A',
+      role: 'Desarrollador Frontend',
+      results: 'Portafolio interactivo y desplegado.',
+      category: 'Desarrollo Web',
+      link: '#',
+      repo_link: 'https://github.com/rodrigomontenegro/portafolio_1'
+    }
   ];
 
   const categories = ['todos', ...new Set(projects.map(project => project.category))];
@@ -533,7 +614,7 @@ function Projects() {
               </div>
               <div className="project-content">
                 <h3>{project.title}</h3>
-                <p>{project.description}</p>
+                <p>{project.summary}</p>
                 <div className="tech-tags">
                   {project.technologies.split(', ').slice(0, 3).map((tech, i) => (
                     <span key={i} className="tech-tag">{tech}</span>
@@ -545,11 +626,11 @@ function Projects() {
         </div>
 
         {selectedProject && (
-          <div className="modal">
-            <div className="modal-content">
-              <ProjectDetail project={selectedProject} onClose={() => setSelectedProject(null)} />
-            </div>
+          <div className="modal" onClick={handleCloseDetail}>
+          <div className="modal-content">
+            <ProjectDetail project={selectedProject} onClose={handleCloseDetail} />
           </div>
+        </div>
         )}
       </div>
     </section>
@@ -576,22 +657,18 @@ function Contact() {
     setLoading(true);
     setStatus('Enviando...');
 
-    const dataToSend = {
-      ...formData,
-      reply_to: formData.from_email
-    };
-
     try {
-      const result = await emailjs.send(
+      const result = await emailjs.sendForm(
         process.env.REACT_APP_EMAILJS_SERVICE_ID,
         process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
-        dataToSend,
+        e.target, // Corresponds to the form element
         process.env.REACT_APP_EMAILJS_PUBLIC_KEY
       );
 
       console.log('Resultado:', result);
       setStatus('¡Mensaje enviado correctamente!');
-      setFormData({ from_name: '', from_email: '', message: '' });
+      e.target.reset(); // Resetea el formulario
+      setFormData({ from_name: '', from_email: '', message: '' }); // Limpia el estado por si acaso
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
       setStatus('Error al enviar el mensaje. Por favor, inténtalo de nuevo.');

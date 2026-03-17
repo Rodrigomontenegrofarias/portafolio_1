@@ -576,16 +576,11 @@ function Contact() {
     setLoading(true);
     setStatus('Enviando...');
 
-    const dataToSend = {
-      ...formData,
-      reply_to: formData.from_email
-    };
-
     try {
-      const result = await emailjs.send(
+      const result = await emailjs.sendForm(
         process.env.REACT_APP_EMAILJS_SERVICE_ID,
         process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
-        dataToSend,
+        e.target,
         process.env.REACT_APP_EMAILJS_PUBLIC_KEY
       );
 

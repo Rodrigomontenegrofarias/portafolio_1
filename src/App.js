@@ -656,6 +656,10 @@ function Contact() {
     setLoading(true);
     setStatus('Enviando...');
 
+    // --- INICIO DE LÍNEA DE DEPURACIÓN ---
+    console.log('Public Key leída desde env:', process.env.REACT_APP_EMAILJS_PUBLIC_KEY);
+    // --- FIN DE LÍNEA DE DEPURACIÓN ---
+
     try {
       const result = await emailjs.sendForm(
         process.env.REACT_APP_EMAILJS_SERVICE_ID,

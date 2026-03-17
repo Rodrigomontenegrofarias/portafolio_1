@@ -18,7 +18,7 @@ trigger:
 pr: none
 
 pool:
-  name: Default
+  name: azure
 
 variables:
   # Variable Group desde Library

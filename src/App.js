@@ -226,7 +226,7 @@ function Home() {
     <section id="inicio" className="section home full-height">
       <div className="container home-container">
         <div className="home-content">
-          <h1 className="home-title">¡Hola! Soy Rodrigo <span className="wave-emoji">👋</span></h1>
+          <h1 className="home-title">¡Hola! mi nombre es Rodrigo Montenegro <span className="wave-emoji">👋</span></h1>
           <h2 className="home-subtitle">Construyendo el futuro con código y automatización</h2>
 
           <div className="home-description">

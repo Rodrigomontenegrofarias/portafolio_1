@@ -626,10 +626,10 @@ function Projects() {
 
         {selectedProject && (
           <div className="modal" onClick={handleCloseDetail}>
-          <div className="modal-content">
-            <ProjectDetail project={selectedProject} onClose={handleCloseDetail} />
+            <div className="modal-content">
+              <ProjectDetail project={selectedProject} onClose={handleCloseDetail} />
+            </div>
           </div>
-        </div>
         )}
       </div>
     </section>
@@ -665,7 +665,6 @@ function Contact() {
         process.env.REACT_APP_EMAILJS_SERVICE_ID,
         process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
         e.target,
-        e.target, // Corresponds to the form element
         process.env.REACT_APP_EMAILJS_PUBLIC_KEY
       );
 
